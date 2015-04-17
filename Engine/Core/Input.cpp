@@ -1,12 +1,37 @@
 #include "Input.h"
 
 #include "../EntitySystem/World.h"
+#include "KeyboardMouse.h"
 
 namespace Engine
 {
+	const bool BaseDevice::getButton(const Button &button)
+	{
+		return buttons[button];
+	}
+
+	const bool BaseDevice::getButtonDown(const Button &button)
+	{
+		return (buttons[button] && !buttonsOld[button]);
+	}
+
+	const bool BaseDevice::getButtonUp(const Button &button)
+	{
+		return (!buttons[button] && buttonsOld[button]);
+	}
+
+	const float BaseDevice::getAxis(const Axis &axis)
+	{
+		return axes[axis];
+	}
+
 	void Input::initialise()
 	{
+		// Add SDL keyboard/mouse device
+		devices[KeyboardMouse::getTypeId()][0] = std::make_unique<KeyboardMouse>();
+
 		// Handle initial events
+		update(manager->getWorld().entities);
 	}
 
 	void Input::uninitialise()
@@ -36,14 +61,14 @@ namespace Engine
 			// Handle mouse motion
 			else if (e.type == SDL_MOUSEMOTION)
 			{
-				//if (exists<KeyboardMouse>(e.motion.which))
-				//	get<KeyboardMouse>(e.motion.which).handle(e);
+				if (exists<KeyboardMouse>(e.motion.which))
+					get<KeyboardMouse>(e.motion.which).handle(e);
 			}
 			// Handle mouse buttons
 			else if (e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONDOWN)
 			{
-				//if (exists<KeyboardMouse>(e.button.which))
-				//	get<KeyboardMouse>(e.button.which).handle(e);
+				if (exists<KeyboardMouse>(e.button.which))
+					get<KeyboardMouse>(e.button.which).handle(e);
 			}
 		}
 	}

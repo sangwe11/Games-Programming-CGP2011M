@@ -2,6 +2,8 @@
 #define _INPUT_H
 
 #include <SDL/SDL.h>
+#include <string>
+#include <map>
 
 #include "../EntitySystem/System.h"
 
@@ -27,14 +29,14 @@ namespace Engine
 		const std::string &getName();
 
 		// Get button state
-		const bool &getButton(const Button &button);
-		const bool &getButtonDown(const Button &button);
-		const bool &getButtonUp(const Button &button);
+		const bool getButton(const Button &button);
+		const bool getButtonDown(const Button &button);
+		const bool getButtonUp(const Button &button);
 
 		// Get axis state
-		const float &getAxis(const Axis &axis);
+		const float getAxis(const Axis &axis);
 
-	private:
+	protected:
 		uint32_t id;
 		std::string name;
 
@@ -49,6 +51,7 @@ namespace Engine
 	template <typename T>
 	class Device : public BaseDevice
 	{
+	public:
 		static EntitySystem::TypeId getTypeId()
 		{
 			return EntitySystem::Type<BaseDevice>::getTypeId<T>();
