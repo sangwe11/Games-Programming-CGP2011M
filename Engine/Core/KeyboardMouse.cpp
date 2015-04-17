@@ -31,7 +31,7 @@ namespace Engine
 		// Update button states
 		for (std::pair<SDL_Scancode, std::vector<Button>> binding : buttonBindings)
 			for (const Button &button : binding.second)
-				buttons[button] = keystate[binding.first];
+				buttons[button] = keystate[binding.first] != 0;
 
 		// Update axes
 		for (std::pair<std::pair<SDL_Scancode, SDL_Scancode>, std::vector<Axis>> binding : axisBindings)
