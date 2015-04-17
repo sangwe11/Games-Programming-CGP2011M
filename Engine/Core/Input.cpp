@@ -2,6 +2,7 @@
 
 #include "../EntitySystem/World.h"
 #include "KeyboardMouse.h"
+#include "Controller.h"
 
 namespace Engine
 {
@@ -69,6 +70,39 @@ namespace Engine
 			{
 				if (exists<KeyboardMouse>(e.button.which))
 					get<KeyboardMouse>(e.button.which).handle(e);
+			}
+			// Handle controller added
+			else if (e.type == SDL_CONTROLLERDEVICEADDED)
+			{
+				// Get controller typeid
+				EntitySystem::TypeId typeId = Controller::getTypeId();
+
+				// Create new controller
+				devices[typeId][e.cdevice.which] = std::make_unique<Controller>(e.cdevice.which);
+
+				// Map device to active device
+				controllerDevices[devices[typeId][e.cdevice.which]->getId()] = e.cdevice.which;
+
+				// Print debug message
+				std::cout << "Controller " << e.cdevice.which << " added." << std::endl;
+			}
+			// Handle controller removed
+			else if (e.type == SDL_CONTROLLERDEVICEREMOVED)
+			{
+				// Remove the device
+				devices[Controller::getTypeId()].erase(controllerDevices[e.cdevice.which]);
+
+				// Unmap from active devices
+				controllerDevices.erase(e.cdevice.which);
+
+				// Print debug message
+				std::cout << "Controller " << controllerDevices[e.cdevice.which] << " removed." << std::endl;
+			}
+			// Handle controller input
+			else if (e.type == SDL_CONTROLLERAXISMOTION || e.type == SDL_CONTROLLERBUTTONDOWN || e.type == SDL_CONTROLLERBUTTONUP)
+			{
+				if (exists<Controller>(e.cdevice.which))
+					get<Controller>(e.cdevice.which).handle(e);
 			}
 		}
 	}

@@ -25,8 +25,8 @@ namespace Engine
 		virtual void handle(const SDL_Event &e) { }
 
 		// Get device information
-		const uint32_t &getId();
-		const std::string &getName();
+		const uint32_t &getId() { return id; }
+		const std::string &getName() { return name; }
 
 		// Get button state
 		const bool getButton(const Button &button);
@@ -101,6 +101,7 @@ namespace Engine
 
 	private:
 		std::map<EntitySystem::TypeId, std::map<uint32_t, std::unique_ptr<BaseDevice>>> devices;
+		std::map<uint32_t, uint32_t> controllerDevices;
 		bool quit = false;
 	};
 }
