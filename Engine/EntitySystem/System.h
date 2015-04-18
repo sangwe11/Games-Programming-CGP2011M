@@ -4,6 +4,7 @@
 #include <map>
 #include <memory>
 #include <assert.h>
+#include <functional>
 
 #include "TypeId.h"
 #include "Entity.h"
@@ -27,8 +28,16 @@ namespace EntitySystem
 		// Called when system is removed from a SystemManager
 		virtual void uninitialise() { }
 
-		// Modify components
-		virtual void update(EntityManager &entities) = 0;
+		// Add function to main update loop
+		template <typename T>
+		void addUpdateFunction(void(T::*function)(), T &system, const int &priority, const bool &fixed = false)
+		{
+			// Bind function
+			std::function<void()> call = std::bind(function, &system);
+
+			// Add function
+			manager->addUpdateFunction(T::getTypeId(), call, priority, fixed);
+		}
 
 		// Get manager system belongs to
 		SystemManager &getManager()
@@ -38,7 +47,6 @@ namespace EntitySystem
 
 	protected:
 		friend class SystemManager;
-		unsigned int priority = 50;
 
 		SystemManager *manager;
 	};
@@ -77,6 +85,9 @@ namespace EntitySystem
 			return SystemHandle<System>(this);
 		}
 
+		// Add functions to update/fixed update loop
+		void addUpdateFunction(const TypeId &typeId, std::function<void()> function, const int &priority, const bool &fixed);
+
 		template <typename System>
 		typename System::Handle getSystem()
 		{
@@ -94,15 +105,42 @@ namespace EntitySystem
 		template <typename System>
 		void removeSystem()
 		{
+			// Assert system exists
 			assert(systemExists<System>());
 
+			// Get system type
 			TypeId type = Type<BaseSystem>::getTypeId<System>();
 
+			// Remove system
 			systems[type]->uninitialise();
 			systems[type] = nullptr;
+
+			// Remove update functions
+			std::multimap<int, std::pair<TypeId, std::function<void()>>>::iterator iter = updateFunctions.begin();
+
+			while (iter != updateFunctions.end())
+			{
+				if (iter->second.first == type)
+					iter = updateFunctions.erase(iter);
+				else
+					++iter;
+			}
+
+			// Remove fixed update functions
+			std::multimap<int, std::pair<TypeId, std::function<void()>>>::iterator iter2 = fixedUpdateFunctions.begin();
+
+			while (iter2 != fixedUpdateFunctions.end())
+			{
+				if (iter2->second.first == type)
+					iter2 = fixedUpdateFunctions.erase(iter2);
+				else
+					++iter2;
+			}
+
 		}
 
-		void updateAll();
+		void update();
+		void fixedUpdate();
 
 		// Get the world the manager belongs to
 		World &getWorld()
@@ -127,6 +165,8 @@ namespace EntitySystem
 		}
 
 		std::vector<std::unique_ptr<BaseSystem>> systems;
+		std::multimap<int, std::pair<TypeId, std::function<void()>>> updateFunctions;
+		std::multimap<int, std::pair<TypeId, std::function<void()>>> fixedUpdateFunctions;
 		World &world;
 	};
 
