@@ -20,7 +20,7 @@ namespace Engine
 		virtual ~BaseFile() { }
 
 		// All file types must implement a load function and return true if the file was loaded successfully
-		virtual bool load(){ return false; }
+		virtual bool load(){ std::cout << "load() had not been overridden or overloaded." << std::endl; return false; }
 
 		// Optional setup function
 		virtual void setup() { }
@@ -52,8 +52,8 @@ namespace Engine
 	public:
 		virtual void uninitialise();
 
-		template <typename T>
-		T &loadFile(const std::string &name)
+		template <typename T, typename... Args>
+		T &loadFile(const std::string &name, Args &&... args)
 		{
 			// Get file type id
 			EntitySystem::TypeId typeId = T::getTypeId();
@@ -68,17 +68,22 @@ namespace Engine
 				// Create a new file of type
 				files[typeId][name] = std::make_unique<T>();
 
+				T &file = dynamic_cast<T &>(*files[typeId][name]);
+
 				// Store file name
-				files[typeId][name]->name = name;
+				file.name = name;
 
 				// Assert the file loaded
-				assert(files[typeId][name]->load());
+				assert(file.load(std::forward<Args>(args)...));
+
+				// Print debug message
+				std::cout << "Loaded file: " << name << std::endl;
 
 				// Setup
-				files[typeId][name]->setup();
+				file.setup();
 
 				// Return loaded file
-				return dynamic_cast<T &>(*files[typeId][name]);
+				return file;
 			}
 		}
 
