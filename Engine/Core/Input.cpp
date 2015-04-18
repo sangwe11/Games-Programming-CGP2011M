@@ -31,8 +31,11 @@ namespace Engine
 		// Add SDL keyboard/mouse device
 		devices[KeyboardMouse::getTypeId()][0] = std::make_unique<KeyboardMouse>();
 
+		// Add function to update loop
+		addUpdateFunction(&Input::update, *this, 10, false);
+
 		// Handle initial events
-		update(manager->getWorld().entities);
+		update();
 	}
 
 	void Input::uninitialise()
@@ -41,7 +44,7 @@ namespace Engine
 		devices.clear();
 	}
 
-	void Input::update(EntitySystem::EntityManager &entities)
+	void Input::update()
 	{
 		SDL_Event e;
 

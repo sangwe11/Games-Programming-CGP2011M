@@ -64,7 +64,7 @@ namespace Engine
 		// Overload virtual functions
 		virtual void initialise();
 		virtual void uninitialise();
-		virtual void update(EntitySystem::EntityManager &entities);
+		void update();
 
 		// Check if quit event has been triggered
 		const bool checkQuit() { return quit; }

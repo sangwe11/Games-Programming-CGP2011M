@@ -1,6 +1,7 @@
 #include <Core/Instance.h>
 #include <Core/Files.h>
 #include <Core/Input.h>
+#include <Core/KeyboardMouse.h>
 
 int main(int argc, char *argv[])
 {
@@ -19,7 +20,7 @@ int main(int argc, char *argv[])
 	while (!input->checkQuit())
 	{
 		// Update input
-		input->update(engine.entities);
+		engine.update();
 	}
 
 	return 0;

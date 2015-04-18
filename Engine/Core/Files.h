@@ -51,7 +51,6 @@ namespace Engine
 	{
 	public:
 		virtual void uninitialise();
-		virtual void update(EntitySystem::EntityManager &entities);
 
 		template <typename T>
 		T &loadFile(const std::string &name)
