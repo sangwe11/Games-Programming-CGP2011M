@@ -18,9 +18,9 @@ solution "Games-Programming-CGP2011M"
 	configuration {}
 	
 	configuration "windows"
-		links { "SDL/SDL2", "SDL/SDL2main", "SDL/SDL2_image", "opengl32", "GLEW/glew32" }
+		links { "SDL/SDL2", "SDL/SDL2main", "SDL/SDL2_image", "ASSIMP/assimp", "opengl32", "GLEW/glew32" }
 	configuration "linux"
-		links { "SDL2", "SDL2main", "SDL2_image", "GL", "GLEW" }
+		links { "SDL2", "SDL2main", "SDL2_image", "assimp", "GL", "GLEW" }
 	configuration {}
 
 	project "Engine"
