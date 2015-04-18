@@ -11,7 +11,7 @@ namespace Engine
 		Instance();
 		~Instance();
 
-		void setup();
+		void setup(const std::string &title, const unsigned int &width, const unsigned int &height, const bool &fullscreen, const bool &vsync);
 		void cleanup();
 		void update();
 	};
