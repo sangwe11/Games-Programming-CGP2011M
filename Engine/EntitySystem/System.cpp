@@ -5,13 +5,25 @@
 
 namespace EntitySystem
 {
-	void SystemManager::updateAll()
+	void SystemManager::addUpdateFunction(const TypeId &typeId, std::function<void()> function, const int &priority, const bool &fixed)
 	{
-		// Sort systems by priority
-		std::sort(systems.begin(), systems.end(), [](std::unique_ptr<BaseSystem> &x, std::unique_ptr<BaseSystem> &y) { return x->priority < y->priority; });
+		if (fixed)
+			fixedUpdateFunctions.insert(std::make_pair(priority, std::make_pair(typeId, function)));
+		else
+			updateFunctions.insert(std::make_pair(priority, std::make_pair(typeId, function)));
+	}
 
-		// Update each system in turn
-		for (auto &system : systems)
-			system->update(world.entities);
+	void SystemManager::update()
+	{
+		// Call each function in the update function list
+		for (auto &function : updateFunctions)
+			function.second.second();
+	}
+
+	void SystemManager::fixedUpdate()
+	{
+		// Call each function in the fixed update function list
+		for (auto &function : fixedUpdateFunctions)
+			function.second.second();
 	}
 }
