@@ -126,14 +126,18 @@ namespace Engine
 		glReadBuffer(GL_COLOR_ATTACHMENT0 + textures);
 	}
 
-	void Framebuffer::clear(const std::vector<unsigned int> &textures, const bool &depth)
+	void Framebuffer::clear(const std::vector<unsigned int> &textures, const bool &depth, const bool &stencil)
 	{
 		// Bind and clear
 		bind(false, true);
 		bindDrawbuffers(textures);
 
-		if (depth)
+		if (depth && stencil)
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		else if (depth)
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		else if (stencil)
+			glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		else
 			glClear(GL_COLOR_BUFFER_BIT);
 	}

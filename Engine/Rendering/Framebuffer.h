@@ -22,7 +22,7 @@ namespace Engine
 		void bindDrawbuffers(const std::vector<unsigned int> &textures);
 		void bindReadbuffer(const unsigned int &textures);
 
-		void clear(const std::vector<unsigned int> &textures, const bool &depth);
+		void clear(const std::vector<unsigned int> &textures, const bool &depth, const bool &stencil);
 
 	private:
 		GLuint fbo;

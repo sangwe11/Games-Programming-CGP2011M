@@ -57,7 +57,7 @@ namespace Engine
 			glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 			// Clear textures and depth ready for drawing (Diffuse, Position, Normal and Specular)
-			framebuffer.clear({ 0, 1, 2, 3 }, true);
+			framebuffer.clear({ 0, 1, 2, 3 }, true, false);
 
 			// Render geometry
 			meshRender(camera);
@@ -65,6 +65,12 @@ namespace Engine
 			// Render skybox
 			if (camera.getEntity().hasComponent<Skybox>())
 				skyboxRender(camera);
+
+			framebuffer.clear({ 4 }, false, false);
+
+			// Lighting
+			if (camera->getLighting())
+				lighting(camera);
 
 			// Post processing
 			postProcessing(camera, postProcessingPasses);
@@ -169,6 +175,217 @@ namespace Engine
 
 		// Restore backface culling
 		glCullFace(GL_BACK);
+	}
+
+	void Rendering::lighting(Camera::Handle &camera)
+	{
+		// Bind textures for reading (Position, Diffuse + opacity, Normal, Specular color + exponent)
+		camera->getFramebuffer().bindTextures({ 0, 1, 2, 3 });
+
+		// Bind final texture as drawbuffer
+		camera->getFramebuffer().bindDrawbuffers({ 4 });
+
+		// Enable blending
+		glEnable(GL_BLEND);
+		glBlendEquation(GL_FUNC_ADD);
+		glBlendFunc(GL_ONE, GL_ONE);
+
+		// Disable depth test
+		glDisable(GL_DEPTH_TEST);
+
+		// Get handle to file system
+		Files::Handle files = manager->getSystem<Files>();
+
+		// Load shaders
+		Shader &directionalShader = files->loadFile<Shader>("shaders/Lighting/lighting_directional");
+		Shader &stencilShader = files->loadFile<Shader>("shaders/Lighting/lighting_stencil");
+		Shader &pointShader = files->loadFile<Shader>("shaders/Lighting/lighting_point");
+		Shader &spotShader = files->loadFile<Shader>("shaders/Lighting/lighting_spot");
+		
+		// Use directional light shader
+		directionalShader.use();
+
+		// Set uniforms
+		directionalShader.setUniform("diffuseOpacityIn", 1);
+		directionalShader.setUniform("normalIn", 2);
+		directionalShader.setUniform("screenSize", manager->getSystem<Display>()->getSize());
+
+		// Render directional lights
+		for (DirectionalLight::Handle &light : manager->getWorld().entities.getAllComponents<DirectionalLight>(true))
+			directionalPass(light, directionalShader);
+
+		// Enable stencil test for lighting volumes
+		glEnable(GL_STENCIL_TEST);
+
+		// Get transform uniform buffer
+		UniformBuffer &transformBuffer = getUniformBuffer("transformUniforms");
+
+		// Render point lights
+		for (PointLight::Handle &light : manager->getWorld().entities.getAllComponents<PointLight>(true))
+		{
+			// Create model matrix to scale sphere
+			Transform::Handle transform = light.getEntity().getComponent<Transform>();
+			glm::mat4 lightMatrix = glm::translate(transform->position) * glm::mat4_cast(transform->getRotation()) * glm::scale(glm::vec3(light->radius));
+
+			// Buffer uniform data
+			glBindBuffer(GL_UNIFORM_BUFFER, transformBuffer.getBuffer());
+			glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), &lightMatrix[0][0]);
+			glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+			// Clear stencil buffer only
+			camera->getFramebuffer().clear({}, false, true);
+
+			// Setup for stencil pass
+			glEnable(GL_DEPTH_TEST);
+			glDepthMask(GL_FALSE);
+			glDisable(GL_CULL_FACE);
+			glStencilFunc(GL_ALWAYS, 0, 0);
+			glStencilOpSeparate(GL_BACK, GL_KEEP, GL_INCR_WRAP, GL_KEEP);
+			glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_DECR_WRAP, GL_KEEP);
+
+			// Stencil pass
+			lightStencilPass(light, stencilShader);
+
+			// Bind final texture as drawbuffer
+			camera->getFramebuffer().bindDrawbuffers({ 4 });
+
+			// Setup for point light pass
+			glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
+			glDisable(GL_DEPTH_TEST);
+			glEnable(GL_CULL_FACE);
+			glCullFace(GL_FRONT);
+
+			// Point light pass
+			pointLightPass(light, pointShader);
+		}
+
+		// Render spot lights
+		for (SpotLight::Handle &light : manager->getWorld().entities.getAllComponents<SpotLight>(true))
+		{
+			// Create model matrix to scale sphere
+			Transform::Handle transform = light.getEntity().getComponent<Transform>();
+			glm::mat4 lightMatrix = glm::translate(transform->position) * glm::mat4_cast(transform->getRotation()) * glm::scale(glm::vec3(light->radius));
+
+			// Buffer uniform data
+			glBindBuffer(GL_UNIFORM_BUFFER, transformBuffer.getBuffer());
+			glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), &lightMatrix[0][0]);
+			glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+			// Clear stencil buffer only
+			camera->getFramebuffer().clear({}, false, true);
+
+			// Setup for stencil pass
+			glEnable(GL_DEPTH_TEST);
+			glDepthMask(GL_FALSE);
+			glDisable(GL_CULL_FACE);
+			glStencilFunc(GL_ALWAYS, 0, 0);
+			glStencilOpSeparate(GL_BACK, GL_KEEP, GL_INCR_WRAP, GL_KEEP);
+			glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_DECR_WRAP, GL_KEEP);
+
+			// Stencil pass
+			lightStencilPass(light, stencilShader);
+
+			// Bind final texture as drawbuffer
+			camera->getFramebuffer().bindDrawbuffers({ 4 });
+
+			// Setup for point light pass
+			glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
+			glDisable(GL_DEPTH_TEST);
+			glEnable(GL_CULL_FACE);
+			glCullFace(GL_FRONT);
+
+			// Point light pass
+			spotLightPass(light, spotShader);
+		}
+
+		// Renable backface culling and depth writing
+		glDepthMask(GL_TRUE);
+		glEnable(GL_DEPTH_TEST);
+		glCullFace(GL_BACK);
+
+		// Disable blending and stencil test
+		glDisable(GL_BLEND);
+		glDisable(GL_STENCIL_TEST);
+	}
+
+	void Rendering::directionalPass(DirectionalLight::Handle &light, Shader &shader)
+	{
+		// Set uniforms
+		shader.setUniform("light.direction", light->direction);
+		shader.setUniform("light.color", light->color);
+		shader.setUniform("light.intensity", light->intensity);
+		shader.setUniform("light.ambient", light->ambient);
+	
+		// Draw light using full screen quad
+		glBindVertexArray(renderingPrimatives["lightingQuad"]->vaObject);
+		glDrawElements(GL_TRIANGLES, renderingPrimatives["lightingQuad"]->drawCount, GL_UNSIGNED_INT, 0);
+	}
+
+	void Rendering::lightStencilPass(PointLight::Handle &light, Shader &shader)
+	{
+		// Use shader
+		shader.use();
+
+		// Draw using scaled icosphere
+		glBindVertexArray(renderingPrimatives["lightingSphere"]->vaObject);
+		glDrawElements(GL_TRIANGLES, renderingPrimatives["lightingSphere"]->drawCount, GL_UNSIGNED_INT, 0);
+	}
+
+	void Rendering::lightStencilPass(SpotLight::Handle &light, Shader &shader)
+	{
+		// Use shader
+		shader.use();
+
+		// Draw using scaled icosphere
+		glBindVertexArray(renderingPrimatives["lightingSphere"]->vaObject);
+		glDrawElements(GL_TRIANGLES, renderingPrimatives["lightingSphere"]->drawCount, GL_UNSIGNED_INT, 0);
+	}
+
+	void Rendering::pointLightPass(PointLight::Handle &light, Shader &shader)
+	{
+		// Use shader
+		shader.use();
+
+		// Set uniforms
+		shader.setUniform("positionIn", 0);
+		shader.setUniform("diffuseOpacityIn", 1);
+		shader.setUniform("normalIn", 2);
+		shader.setUniform("screenSize", manager->getSystem<Display>()->getSize());
+		shader.setUniform("light.position", light.getEntity().getComponent<Transform>()->position);
+		shader.setUniform("light.color", light->color);
+		shader.setUniform("light.intensity", light->intensity);
+		shader.setUniform("light.ambient", light->ambient);
+		shader.setUniform("light.radius", light->radius);
+		shader.setUniform("light.falloff", light->falloff);
+
+		// Draw using scaled icosphere
+		glBindVertexArray(renderingPrimatives["lightingSphere"]->vaObject);
+		glDrawElements(GL_TRIANGLES, renderingPrimatives["lightingSphere"]->drawCount, GL_UNSIGNED_INT, 0);
+	}
+
+	void Rendering::spotLightPass(SpotLight::Handle &light, Shader &shader)
+	{
+		// Use shader
+		shader.use();
+
+		// Set uniforms
+		shader.setUniform("positionIn", 0);
+		shader.setUniform("diffuseOpacityIn", 1);
+		shader.setUniform("normalIn", 2);
+		shader.setUniform("screenSize", manager->getSystem<Display>()->getSize());
+		shader.setUniform("light.position", light.getEntity().getComponent<Transform>()->position);
+		shader.setUniform("light.color", light->color);
+		shader.setUniform("light.intensity", light->intensity);
+		shader.setUniform("light.ambient", light->ambient);
+		shader.setUniform("light.radius", light->radius);
+		shader.setUniform("light.falloff", light->falloff);
+		shader.setUniform("light.direction", light->direction);
+		shader.setUniform("light.angle", light->angle);
+		shader.setUniform("light.exponent", light->exponent);
+
+		// Draw using scaled icosphere
+		glBindVertexArray(renderingPrimatives["lightingSphere"]->vaObject);
+		glDrawElements(GL_TRIANGLES, renderingPrimatives["lightingSphere"]->drawCount, GL_UNSIGNED_INT, 0);
 	}
 
 	void Rendering::postProcessing(Camera::Handle &camera, unsigned int &passes)

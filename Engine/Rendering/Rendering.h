@@ -7,6 +7,7 @@
 #include "UniformBuffer.h"
 #include "RenderingPrimative.h"
 #include "Camera.h"
+#include "Light.h"
 
 namespace Engine
 {
@@ -23,8 +24,19 @@ namespace Engine
 		UniformBuffer &getUniformBuffer(const std::string &name);
 
 	private:
+		// Geometry passes
 		void meshRender(Camera::Handle &camera);
 		void skyboxRender(Camera::Handle &camera);
+
+		// Lighting passes
+		void lighting(Camera::Handle &camera);
+		void directionalPass(DirectionalLight::Handle &light, Shader &shader);
+		void lightStencilPass(PointLight::Handle &light, Shader &shader);
+		void pointLightPass(PointLight::Handle &light, Shader &shader);
+		void lightStencilPass(SpotLight::Handle &light, Shader &shader);
+		void spotLightPass(SpotLight::Handle &light, Shader &shader);
+
+		// Post processing / final passes
 		void postProcessing(Camera::Handle &camera, unsigned int &passes);
 		void finalPass(Camera::Handle &camera, const unsigned int &postProcessingPasses);
 

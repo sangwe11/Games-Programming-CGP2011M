@@ -12,6 +12,7 @@
 #include <Core/Transform.h>
 #include <Rendering/MeshRenderer.h>
 #include <Rendering/Skybox.h>
+#include <Rendering/Light.h>
 
 int main(int argc, char *argv[])
 {
@@ -24,13 +25,23 @@ int main(int argc, char *argv[])
 	// Create player entity
 	EntitySystem::Entity player = engine.entities.createEntity();
 	player.addComponent<Engine::Transform>(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f));
-	player.addComponent<Engine::Camera>(60.0f, 0.3f, 1000.0f, false, false, glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+	player.addComponent<Engine::Camera>(60.0f, 0.3f, 1000.0f, true, false, glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 	player.addComponent<Engine::Skybox>("textures/Skyboxes/ame_starfield", "starfield_rt.tga", "starfield_lf.tga", "starfield_up.tga", "starfield_dn.tga", "starfield_bk.tga", "starfield_ft.tga");
 
 	// Create crate entity
 	EntitySystem::Entity crate = engine.entities.createEntity();
 	crate.addComponent<Engine::Transform>(glm::vec3(0.0f, 0.0f, -5.0f), glm::vec3(0.0f, AI_DEG_TO_RAD(45.0f), 0.0f), glm::vec3(1.0f));
 	crate.addComponent<Engine::MeshRenderer>("models/Environment/Crate/crate.obj");
+
+	// Create sun entity
+	//EntitySystem::Entity sun = engine.entities.createEntity();
+	//sun.addComponent<Engine::Transform>(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f));
+	//sun.addComponent<Engine::DirectionalLight>(glm::vec3(1.0f), 0.2f, 0.1f, glm::vec3(0.0f, -1.0f, -1.0f));
+
+	// Create light
+	EntitySystem::Entity light = engine.entities.createEntity();
+	light.addComponent<Engine::Transform>(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f));
+	light.addComponent<Engine::SpotLight>(glm::vec3(1.0f), 1.0f, 0.01f, 20.0f, 1.0f, glm::vec3(0.0f, 0.0f, -1.0f), 20.0f, 50.0f);
 
 	// Get a handle to the input system
 	Engine::Input::Handle input = engine.systems.getSystem<Engine::Input>();
