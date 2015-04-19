@@ -32,10 +32,10 @@ namespace Engine
 			std::string meshName = name + "_mesh_" + std::to_string(i);
 
 			// Load mesh
-			files->loadFile<Mesh>(meshName, scene->mMeshes[i]);
+			Mesh &mesh = files->loadFile<Mesh>(meshName, scene->mMeshes[i]);
 
-			// Store mesh name
-			meshes.push_back(meshName);
+			// Store mesh pointer
+			meshes.push_back(&mesh);
 		}
 
 		// Load materials
@@ -45,10 +45,10 @@ namespace Engine
 			std::string materialName = name + "_material2D_" + std::to_string(i);
 
 			// Load material
-			files->loadFile<Material2D>(materialName, scene->mMaterials[i], modelPath);
+			Material2D &material = files->loadFile<Material2D>(materialName, scene->mMaterials[i], modelPath);
 
-			// Store material name
-			materials.push_back(materialName);
+			// Store material pointer
+			materials.push_back(&material);
 		}
 
 		// Free scene
@@ -62,5 +62,23 @@ namespace Engine
 		// Clear lists
 		meshes.clear();
 		materials.clear();
+	}
+
+	void Model::draw(Shader &shader)
+	{
+		// Draw each mesh
+		for (Mesh *mesh : meshes)
+		{
+			// Use material
+			materials[mesh->materialIndex]->use(shader);
+
+			// Update mesh uniforms
+			shader.setUniform("hasTangents", mesh->hasTangents);
+
+			// Draw
+			glBindVertexArray(mesh->vaObject);
+			glDrawElements(GL_TRIANGLES, mesh->drawCount, GL_UNSIGNED_INT, 0);
+			glBindVertexArray(0);
+		}
 	}
 }

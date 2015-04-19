@@ -10,6 +10,8 @@ namespace Engine
 {
 	class Mesh : public File<Mesh>
 	{
+		friend class Model;
+
 	public:
 		virtual bool load(aiMesh *mesh);
 		virtual void cleanup();

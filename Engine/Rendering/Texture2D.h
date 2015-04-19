@@ -21,6 +21,9 @@ namespace Engine
 		// Get the OpenGL texture handle
 		const GLuint &get() const;
 
+		// Bind the texture to an active texture unit
+		void use(const unsigned int &unit);
+
 	private:
 		GLuint texture;
 	};

@@ -6,13 +6,21 @@
 #include <GLM/glm.hpp>
 
 #include "../Core/Files.h"
+#include "Texture2D.h"
+#include "Shader.h"
 
 namespace Engine
 {
 	class Material2D : public Engine::File<Material2D>
 	{
+		friend class Rendering;
+
 	public:
+		enum TextureType { Ambient, Diffuse, Normal, Height, Specular, Emissive };
+
 		virtual bool load(aiMaterial *material, const std::string &modelPath);
+
+		void use(Shader &shader);
 
 	private:
 		glm::vec3 ambient;
@@ -23,7 +31,7 @@ namespace Engine
 		float shininessStrength;
 		float opacity;
 
-		std::string textures[10];
+		Texture2D *textures[10];
 	};
 }
 

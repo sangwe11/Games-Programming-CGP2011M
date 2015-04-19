@@ -101,4 +101,10 @@ namespace Engine
 	{
 		return texture;
 	}
+
+	void Texture2D::use(const unsigned int &unit)
+	{
+		glActiveTexture(GL_TEXTURE0 + unit);
+		glBindTexture(GL_TEXTURE_2D, texture);
+	}
 }

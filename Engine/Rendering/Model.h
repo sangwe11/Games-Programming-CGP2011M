@@ -2,6 +2,9 @@
 #define _MODEL_H
 
 #include "../Core/Files.h"
+#include "Mesh.h"
+#include "Material2D.h"
+#include "Shader.h"
 
 namespace Engine
 {
@@ -11,8 +14,11 @@ namespace Engine
 		virtual bool load();
 		virtual void cleanup();
 
-		std::vector<std::string> meshes;
-		std::vector<std::string> materials;
+		void draw(Shader &shader);
+
+	private:
+		std::vector<Mesh *> meshes;
+		std::vector<Material2D *> materials;
 	};
 }
 

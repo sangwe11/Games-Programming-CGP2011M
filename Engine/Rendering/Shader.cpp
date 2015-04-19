@@ -4,6 +4,8 @@
 #include <fstream>
 #include <algorithm>
 
+#include "Rendering.h"
+
 namespace Engine
 {
 	bool Shader::load(const std::string &vertexShader, const std::string &fragmentShader, const std::string &geometryShader)
@@ -69,6 +71,7 @@ namespace Engine
 		// Store all attribs and uniforms for easier lookup
 		GLint numActiveAttribs = 0;
 		GLint numActiveUniforms = 0;
+		GLint numUniformBuffers = 0;
 
 		glGetProgramInterfaceiv(program, GL_PROGRAM_INPUT, GL_ACTIVE_RESOURCES, &numActiveAttribs);
 
@@ -90,7 +93,7 @@ namespace Engine
 
 		glGetProgramInterfaceiv(program, GL_UNIFORM, GL_ACTIVE_RESOURCES, &numActiveUniforms);
 
-		// Get an store active uniform
+		// Get and store active uniforms
 		for (int uniform = 0; uniform < numActiveUniforms; ++uniform)
 		{
 			// Grab the resource name and store
@@ -107,6 +110,54 @@ namespace Engine
 			// Check the uniform is not part of a uniform block and store
 			if (location != 4294967295)
 				uniforms[name] = location;
+		}
+
+		// Get and store active uniform buffers
+		glGetProgramInterfaceiv(program, GL_UNIFORM_BLOCK, GL_ACTIVE_RESOURCES, &numUniformBuffers);
+
+		for (int buffer = 0; buffer < numUniformBuffers; buffer++)
+		{
+			std::vector<GLchar> nameData(256);
+
+			// Get the resource name and store in nameData
+			glGetProgramResourceName(program, GL_UNIFORM_BLOCK, buffer, nameData.size(), NULL, &nameData[0]);
+
+			// Convert to std::string and strip null chars using c++11 lambda
+			std::string name((char*)&nameData[0], nameData.size() - 1);
+			name.erase(std::remove_if(name.begin(), name.end(), [](char c){ return (c == '\0'); }), name.end());
+
+			// Get location in shader
+			GLint blockIndex = glGetUniformBlockIndex(program, &nameData[0]);
+
+			// Buffer binding
+			GLuint bufferBinding;
+
+			// Check if the uniform buffer exists
+			if (files->getManager().getSystem<Rendering>()->uniformBufferExists(name))
+			{
+				// Get the uniform buffer
+				UniformBuffer &uniformBuffer = files->getManager().getSystem<Rendering>()->getUniformBuffer(name);
+
+				// Get buffer binding
+				bufferBinding = uniformBuffer.getBufferBinding();
+			}
+			else
+			{
+				GLint bufferSize;
+
+				// Get block size
+				glGetActiveUniformBlockiv(program, blockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, &bufferSize);
+
+				// Create the uniform buffer
+				UniformBuffer &uniformBuffer = files->getManager().getSystem<Rendering>()->newUniformBuffer(name, bufferSize);
+
+				// Get buffer binding
+				bufferBinding = uniformBuffer.getBufferBinding();
+			}
+
+			// Set block binding
+			if (blockIndex != 4294967295)
+				glUniformBlockBinding(program, blockIndex, bufferBinding);
 		}
 
 		return true;

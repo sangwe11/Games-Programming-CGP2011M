@@ -22,8 +22,8 @@ namespace Engine
 			material->GetTexture(aiTextureType_AMBIENT, 0, &path);
 
 			// Load texture
-			files->loadFile<Texture2D>(modelPath + path.C_Str(), true, true, 16);
-			textures[0] = path.C_Str();
+			Texture2D &texture = files->loadFile<Texture2D>(modelPath + path.C_Str(), true, true, 16);
+			textures[TextureType::Ambient] = &texture;
 		}
 
 		// Diffuse texture
@@ -34,8 +34,8 @@ namespace Engine
 			material->GetTexture(aiTextureType_DIFFUSE, 0, &path);
 
 			// Load texture
-			files->loadFile<Texture2D>(modelPath + path.C_Str(), true, true, 16);
-			textures[1] = path.C_Str();
+			Texture2D &texture = files->loadFile<Texture2D>(modelPath + path.C_Str(), true, true, 16);
+			textures[TextureType::Diffuse] = &texture;
 		}
 
 		// Normals texture
@@ -46,8 +46,8 @@ namespace Engine
 			material->GetTexture(aiTextureType_NORMALS, 0, &path);
 
 			// Load texture
-			files->loadFile<Texture2D>(modelPath + path.C_Str(), true, true, 16);
-			textures[2] = path.C_Str();
+			Texture2D &texture = files->loadFile<Texture2D>(modelPath + path.C_Str(), true, true, 16);
+			textures[TextureType::Normal] = &texture;
 		}
 
 		// Height texture as normals
@@ -58,10 +58,41 @@ namespace Engine
 			material->GetTexture(aiTextureType_HEIGHT, 0, &path);
 
 			// Load texture
-			files->loadFile<Texture2D>(modelPath + path.C_Str(), true, true, 16);
-			textures[2] = path.C_Str();
+			Texture2D &texture = files->loadFile<Texture2D>(modelPath + path.C_Str(), true, true, 16);
+			textures[TextureType::Normal] = &texture;
 		}
 
 		return true;
+	}
+
+	void Material2D::use(Shader &shader)
+	{
+		// Update material uniforms
+		shader.setUniform("diffuseColor", diffuse);
+		shader.setUniform("opacity", opacity);
+		shader.setUniform("specularColor", specular);
+		shader.setUniform("specularExponent", shininess);
+		shader.setUniform("hasDiffuseMap", (textures[Material2D::TextureType::Diffuse] != nullptr));
+		shader.setUniform("hasNormalMap", (textures[Material2D::TextureType::Normal] != nullptr));
+
+		// Use diffuse texture
+		if (textures[Material2D::TextureType::Diffuse] != nullptr)
+		{
+			// Bind to texture unit 0
+			textures[Material2D::TextureType::Diffuse]->use(0);
+
+			// Set shader uniform
+			shader.setUniform("diffuseMap", 0);
+		}
+
+		// Use normal texture
+		if (textures[Material2D::TextureType::Normal] != nullptr)
+		{
+			// Bind to texture unit 1
+			textures[Material2D::TextureType::Normal]->use(1);
+
+			// Set shader uniform
+			shader.setUniform("normalMap", 1);
+		}
 	}
 }
