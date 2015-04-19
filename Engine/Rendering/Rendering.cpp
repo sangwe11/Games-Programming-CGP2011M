@@ -9,6 +9,7 @@
 #include "MeshRenderer.h"
 #include "Model.h"
 #include "../Core/Transform.h"
+#include "Skybox.h"
 
 namespace Engine
 {
@@ -59,6 +60,10 @@ namespace Engine
 			// Render geometry
 			meshRender(camera);
 
+			// Render skybox
+			if (camera.getEntity().hasComponent<Skybox>())
+				skyboxRender(camera);
+
 			// Render camera to screen
 			finalPass(camera);
 
@@ -106,6 +111,61 @@ namespace Engine
 		}
 	}
 
+	void Rendering::skyboxRender(Camera::Handle &camera)
+	{
+		// Get skybox component attached to camera
+		Skybox::Handle skybox = camera.getEntity().getComponent<Skybox>();
+
+		// Get handle to file system
+		Files::Handle files = manager->getSystem<Files>();
+
+		// Load and use shader
+		Shader &shader = files->loadFile<Shader>("shaders/Geometry/skybox", "shaders/Geometry/skybox.vertex", "shaders/Geometry/skybox.fragment");
+		shader.use();
+
+		// If using lighting, draw to final texture, otherwise draw to diffuse texture
+		if (camera->getLighting())
+			camera->getFramebuffer().bindDrawbuffers({ 4 });
+		else
+			camera->getFramebuffer().bindDrawbuffers({ 1 });
+
+		// Use skybox texture
+		skybox->texture.use(0);
+
+		// Set uniforms
+		shader.setUniform("cubemapTexture", 0);
+
+		// Get transform uniform buffer
+		UniformBuffer &transformBuffer = getUniformBuffer("transformUniforms");
+
+		// Get transform component
+		Transform::Handle &transform = skybox->entity.getComponent<Transform>();
+
+		// Get model matrix
+		glm::mat4 t = transform->getModelMatrix();
+
+		// Buffer uniform data
+		glBindBuffer(GL_UNIFORM_BUFFER, transformBuffer.getBuffer());
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), &t[0][0]);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+		// Cull front faces
+		glCullFace(GL_FRONT);
+
+		// Load cube primative model
+		Model &cube = files->loadFile<Model>("models/Primatives/Cube.obj");
+
+		// Draw skybox cube
+		cube.draw(shader);
+
+		// TODO: look into why the cube rendering primative fails.
+		//glBindVertexArray(renderingPrimatives["skyboxCube"]->vaObject);
+		//glDrawElements(GL_TRIANGLES, renderingPrimatives["skyboxCube"]->drawCount, GL_UNSIGNED_INT, 0);
+
+		// Restore backface culling
+		glCullFace(GL_BACK);
+	}
+
 	void Rendering::finalPass(Camera::Handle &camera)
 	{
 		// Disable depth test
@@ -123,7 +183,7 @@ namespace Engine
 
 		// Bind textures for reading
 		if (camera->getLighting())
-			camera->getFramebuffer().bindTextures({ 5 });
+			camera->getFramebuffer().bindTextures({ 4 });
 		else
 			camera->getFramebuffer().bindTextures({ 1 });
 

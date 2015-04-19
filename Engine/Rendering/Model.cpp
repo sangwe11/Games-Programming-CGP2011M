@@ -70,7 +70,8 @@ namespace Engine
 		for (Mesh *mesh : meshes)
 		{
 			// Use material
-			materials[mesh->materialIndex]->use(shader);
+			if (materials.size() > mesh->materialIndex)
+				materials[mesh->materialIndex]->use(shader);
 
 			// Update mesh uniforms
 			shader.setUniform("hasTangents", mesh->hasTangents);

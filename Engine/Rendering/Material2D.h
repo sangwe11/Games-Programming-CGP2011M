@@ -16,9 +16,12 @@ namespace Engine
 		friend class Rendering;
 
 	public:
-		enum TextureType { Ambient, Diffuse, Normal, Height, Specular, Emissive };
+		enum TextureType { Ambient, Diffuse, Normal, Height, Specular, Emissive, Count };
+
+		Material2D();
 
 		virtual bool load(aiMaterial *material, const std::string &modelPath);
+		virtual void cleanup();
 
 		void use(Shader &shader);
 
@@ -31,7 +34,11 @@ namespace Engine
 		float shininessStrength;
 		float opacity;
 
-		Texture2D *textures[10];
+		bool ambientTexture = false;
+		bool diffuseTexture = false;
+		bool normalTexture = false;
+
+		Texture2D *textures[TextureType::Count];
 	};
 }
 

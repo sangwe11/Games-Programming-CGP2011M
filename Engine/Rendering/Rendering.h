@@ -24,6 +24,7 @@ namespace Engine
 
 	private:
 		void meshRender(Camera::Handle &camera);
+		void skyboxRender(Camera::Handle &camera);
 		void finalPass(Camera::Handle &camera);
 
 		// Uniform buffers
