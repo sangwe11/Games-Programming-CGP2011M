@@ -6,6 +6,7 @@
 #include "Files.h"
 #include "Input.h"
 #include "../Rendering/Display.h"
+#include "../Rendering/Rendering.h"
 
 namespace Engine
 {
@@ -32,6 +33,7 @@ namespace Engine
 		systems.addSystem<Files>();
 		systems.addSystem<Input>();
 		systems.addSystem<Display>(title, width, height, fullscreen, vsync);
+		systems.addSystem<Rendering>();
 
 		// Check all systems exist
 		if (!systems.systemExists<Files>() || !systems.systemExists<Input>() || !systems.systemExists<Display>())
@@ -46,6 +48,9 @@ namespace Engine
 	{
 		// Reset entity world
 		entities.reset();
+
+		// Remove all systems
+		systems.removeAll();
 	}
 
 	void Instance::update()

@@ -85,7 +85,7 @@ namespace EntitySystem
 		Id getId() const { return id; }
 
 		template <typename Component, typename ... Args>
-		typename Component::Handle &addComponent(Args && ... args)
+		typename Component::Handle addComponent(Args && ... args)
 		{
 			//assert(valid());
 			return manager->addComponentToEntity<Component>(id, std::forward<Args>(args) ...);
@@ -99,14 +99,17 @@ namespace EntitySystem
 		}
 
 		template <typename Component>
-		typename Component::Handle &getComponent()
+		typename Component::Handle getComponent()
 		{
 			//assert(valid() && hasComponent<Component>());
+			if (!valid())
+				std::cout << "fail.." << std::endl;
+
 			return manager->getComponentFromEntity<Component>(id);
 		}
 
 		template <typename Component>
-		const typename Component::Handle &getComponent() const
+		const typename Component::Handle getComponent() const
 		{
 			//assert(valid() && hasComponent<Component>());
 			return manager->getComponentFromEntity<const Component>(id);
@@ -208,13 +211,16 @@ namespace EntitySystem
 		virtual ~BaseComponent() { }
 		friend class EntityManager;
 
+		virtual void initialise() { }
+		virtual void uninitialise() { }
+
 		bool isEnabled() const { return enabled; }
 		void enable() { enabled = true; }
 		void disable() { enabled = false; }
 
 	protected:
 		EntityManager *manager = nullptr;
-		Entity::Id entity = Entity::invalidId;
+		Entity entity;
 		bool enabled = true;
 	};
 
@@ -289,7 +295,10 @@ namespace EntitySystem
 
 			// Set manager pointer and entity id
 			components[type][id.index()]->manager = this;
-			components[type][id.index()]->entity = id;
+			components[type][id.index()]->entity = Entity(id, this);
+
+			// Initialise
+			components[type][id.index()]->initialise();
 
 			// Return handle
 			return ComponentHandle<Component>(id, this);
@@ -299,7 +308,7 @@ namespace EntitySystem
 		typename Component::Handle getComponentFromEntity(Entity::Id id)
 		{
 			assert(valid(id) && entityHasComponent<Component>(id));
-			ComponentHandle<Component>(id, this);
+			return ComponentHandle<Component>(id, this);
 		}
 
 		template <typename Component>
@@ -348,8 +357,9 @@ namespace EntitySystem
 
 			// Loop through component type and add to found if enabled (or if we don't care if the component is enabled)
 			for (unsigned int i = 0; i < count; ++i)
-				if ((enabledOnly && components[type][i]->isEnabled()) || !enabledOnly)
-					found.emplace_back(components[type][i]->entity, components[type][i]->manager);
+				if (components[type][i] != nullptr)
+					if ((enabledOnly && components[type][i]->isEnabled()) || !enabledOnly)
+						found.emplace_back(components[type][i]->entity.getId(), components[type][i]->manager);
 
 			return found;
 		}
