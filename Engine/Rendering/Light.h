@@ -32,16 +32,15 @@ namespace Engine
 	class SpotLight : public EntitySystem::Component<SpotLight>
 	{
 	public:
-		SpotLight(glm::vec3 color, float intensity, float ambient, float radius, float falloff, glm::vec3 direction, float angle, float exponent);
+		SpotLight(glm::vec3 color, float intensity, float ambient, float range, glm::vec3 direction, float innerAngle, float outerAngle);
 
 		glm::vec3 color;
 		float intensity;
 		float ambient;
-		float radius;
-		float falloff;
+		float range;
 		glm::vec3 direction;
-		float angle;
-		float exponent;
+		float innerAngle;
+		float outerAngle;
 	};
 }
 

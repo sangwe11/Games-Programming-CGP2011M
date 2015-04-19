@@ -19,15 +19,14 @@ namespace Engine
 		this->falloff = falloff;
 	}
 
-	SpotLight::SpotLight(glm::vec3 color, float intensity, float ambient, float radius, float falloff, glm::vec3 direction, float angle, float exponent)
+	SpotLight::SpotLight(glm::vec3 color, float intensity, float ambient, float range, glm::vec3 direction, float innerAngle, float outerAngle)
 	{
 		this->color = color;
 		this->intensity = intensity;
 		this->ambient = ambient;
-		this->radius = radius;
-		this->falloff = falloff;
+		this->range = range;
 		this->direction = direction;
-		this->angle = angle;
-		this->exponent = exponent;
+		this->innerAngle = innerAngle;
+		this->outerAngle = outerAngle;
 	}
 }

@@ -264,7 +264,7 @@ namespace Engine
 		{
 			// Create model matrix to scale sphere
 			Transform::Handle transform = light.getEntity().getComponent<Transform>();
-			glm::mat4 lightMatrix = glm::translate(transform->position) * glm::mat4_cast(transform->getRotation()) * glm::scale(glm::vec3(light->radius));
+			glm::mat4 lightMatrix = glm::translate(transform->position) * glm::mat4_cast(transform->getRotation()) * glm::scale(glm::vec3(light->range));
 
 			// Buffer uniform data
 			glBindBuffer(GL_UNIFORM_BUFFER, transformBuffer.getBuffer());
@@ -377,11 +377,10 @@ namespace Engine
 		shader.setUniform("light.color", light->color);
 		shader.setUniform("light.intensity", light->intensity);
 		shader.setUniform("light.ambient", light->ambient);
-		shader.setUniform("light.radius", light->radius);
-		shader.setUniform("light.falloff", light->falloff);
-		shader.setUniform("light.direction", light->direction);
-		shader.setUniform("light.angle", light->angle);
-		shader.setUniform("light.exponent", light->exponent);
+		shader.setUniform("light.range", light->range);
+		shader.setUniform("light.direction", glm::mat3(light.getEntity().getComponent<Transform>()->getModelMatrix()) * light->direction);
+		shader.setUniform("light.innerAngle", cos(DegToRads(light->innerAngle)));
+		shader.setUniform("light.outerAngle", cos(DegToRads(light->outerAngle)));
 
 		// Draw using scaled icosphere
 		glBindVertexArray(renderingPrimatives["lightingSphere"]->vaObject);

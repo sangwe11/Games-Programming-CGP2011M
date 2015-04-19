@@ -229,7 +229,7 @@ namespace Engine
 		}
 
 		// Issue a warning if the uniform wasn't found
-		std::cout << "Couldn't find uniform '" << name << "' in shader '" << this->name << "'" << std::endl;
+		//std::cout << "Couldn't find uniform '" << name << "' in shader '" << this->name << "'" << std::endl;
 
 		return false;
 	}
