@@ -23,10 +23,10 @@ namespace Engine
 		newUniformBuffer("transformUniforms", sizeof(glm::mat4));
 
 		// Create rendering primatives
-		renderingPrimatives["framebufferQuad"] = std::make_unique<RenderingQuad>(manager->getSystem<Files>()->loadFile<Shader>("shaders/Post Processing/final_pass", "shaders/Post Processing/final_pass.vertex", "shaders/Post Processing/final_pass.fragment"));
-		renderingPrimatives["lightingQuad"] = std::make_unique<RenderingQuad>(manager->getSystem<Files>()->loadFile<Shader>("shaders/Lighting/lighting_directional", "shaders/Lighting/lighting_directional.vertex", "shaders/Lighting/lighting_directional.fragment"));
-		renderingPrimatives["skyboxCube"] = std::make_unique<RenderingCube>(manager->getSystem<Files>()->loadFile<Shader>("shaders/Geometry/skybox", "shaders/Geometry/skybox.vertex", "shaders/Geometry/skybox.fragment"));
-		renderingPrimatives["lightingSphere"] = std::make_unique<RenderingSphere>(manager->getSystem<Files>()->loadFile<Shader>("shaders/Lighting/lighting_point", "shaders/Lighting/lighting_point.vertex", "shaders/Lighting/lighting_point.fragment"), 2);
+		renderingPrimatives["framebufferQuad"] = std::make_unique<RenderingQuad>(manager->getSystem<Files>()->loadFile<Shader>("shaders/Post Processing/final_pass"));
+		renderingPrimatives["lightingQuad"] = std::make_unique<RenderingQuad>(manager->getSystem<Files>()->loadFile<Shader>("shaders/Lighting/lighting_directional"));
+		renderingPrimatives["skyboxCube"] = std::make_unique<RenderingCube>(manager->getSystem<Files>()->loadFile<Shader>("shaders/Geometry/skybox"));
+		renderingPrimatives["lightingSphere"] = std::make_unique<RenderingSphere>(manager->getSystem<Files>()->loadFile<Shader>("shaders/Lighting/lighting_point"), 2);
 	}
 
 	void Rendering::uninitialise()
@@ -45,6 +45,8 @@ namespace Engine
 
 		for (Camera::Handle &camera : manager->getWorld().entities.getAllComponents<Camera>(true))
 		{
+			unsigned int postProcessingPasses = 0;
+
 			// Get the cameras framebuffer
 			Framebuffer &framebuffer = camera->getFramebuffer();
 
@@ -64,8 +66,11 @@ namespace Engine
 			if (camera.getEntity().hasComponent<Skybox>())
 				skyboxRender(camera);
 
+			// Post processing
+			postProcessing(camera, postProcessingPasses);
+
 			// Render camera to screen
-			finalPass(camera);
+			finalPass(camera, postProcessingPasses);
 
 			// Unbind framebuffer
 			framebuffer.unbind(true, true);
@@ -83,7 +88,7 @@ namespace Engine
 		Files::Handle files = manager->getSystem<Files>();
 
 		// Load and use shader
-		Shader &shader = files->loadFile<Shader>("mesh_render", "shaders/Geometry/mesh_render.vertex", "shaders/Geometry/mesh_render.fragment");
+		Shader &shader = files->loadFile<Shader>("shaders/Geometry/mesh_render");
 		shader.use();
 
 		// Get transform uniform buffer
@@ -120,7 +125,7 @@ namespace Engine
 		Files::Handle files = manager->getSystem<Files>();
 
 		// Load and use shader
-		Shader &shader = files->loadFile<Shader>("shaders/Geometry/skybox", "shaders/Geometry/skybox.vertex", "shaders/Geometry/skybox.fragment");
+		Shader &shader = files->loadFile<Shader>("shaders/Geometry/skybox");
 		shader.use();
 
 		// If using lighting, draw to final texture, otherwise draw to diffuse texture
@@ -166,7 +171,75 @@ namespace Engine
 		glCullFace(GL_BACK);
 	}
 
-	void Rendering::finalPass(Camera::Handle &camera)
+	void Rendering::postProcessing(Camera::Handle &camera, unsigned int &passes)
+	{
+		// Disable depth testing
+		glDisable(GL_DEPTH_TEST);
+
+		// Enable alpha
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE);
+
+		// Loop through post processing effects and apply
+		for (auto &effect : camera->getAllPostProcessingEffects())
+		{
+			if (effect.second->isEnabled())
+			{
+				// Load and use shader
+				Shader &shader = effect.second->getShader();
+				shader.use();
+
+				// Set uniforms
+				shader.setUniform("sceneTexture", 0);
+				effect.second->setUniforms();
+
+				// Bind framebuffer for post processing pass
+				if (passes == 0)
+				{
+					// Read from final texture if using lighting, otherwise read from diffuse
+					if (camera->getLighting())
+						camera->getFramebuffer().bindTextures({ 4 });
+					else
+						camera->getFramebuffer().bindTextures({ 1 });
+
+					// Draw to first post processing texture
+					camera->getFramebuffer().bindDrawbuffers({ 5 });
+				}
+				else if (passes % 2 == 0)
+				{
+					// Even pass read from second post processing texture
+					camera->getFramebuffer().bindTextures({ 6 });
+
+					// And draw to first
+					camera->getFramebuffer().bindDrawbuffers({ 5 });
+				}
+				else
+				{
+					// Odd pass read from first post processing texture
+					camera->getFramebuffer().bindTextures({ 5 });
+
+					// And draw to second
+					camera->getFramebuffer().bindDrawbuffers({ 6 });
+				}
+
+				// Clear
+				glClear(GL_COLOR_BUFFER_BIT);
+
+				// Draw fullscreen quad
+				glBindVertexArray(renderingPrimatives["framebufferQuad"]->vaObject);
+				glDrawElements(GL_TRIANGLES, renderingPrimatives["framebufferQuad"]->drawCount, GL_UNSIGNED_INT, 0);
+
+				// Increment pass count
+				++passes;
+			}
+		}
+
+		// Disable blending, renable depth test
+		glDisable(GL_BLEND);
+		glEnable(GL_DEPTH_TEST);
+	}
+
+	void Rendering::finalPass(Camera::Handle &camera, const unsigned int &postProcessingPasses)
 	{
 		// Disable depth test
 		glDisable(GL_DEPTH_TEST);
@@ -175,17 +248,21 @@ namespace Engine
 		Files::Handle files = manager->getSystem<Files>();
 
 		// Load and use shader
-		Shader &shader = files->loadFile<Shader>("shaders/Post Processing/final_pass", "shaders/Post Processing/final_pass.vertex", "shaders/Post Processing/final_pass.fragment");
+		Shader &shader = files->loadFile<Shader>("shaders/Post Processing/final_pass");
 		shader.use();
 
 		// Bind default framebuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		// Bind textures for reading
-		if (camera->getLighting())
-			camera->getFramebuffer().bindTextures({ 4 });
+		if (postProcessingPasses == 0 && camera->getLighting())
+			camera->getFramebuffer().bindTextures({ 4 }); // Read from final texture
+		else if (postProcessingPasses == 0)
+			camera->getFramebuffer().bindTextures({ 1 }); // Read from diffuse texture
+		else if (postProcessingPasses % 2 == 0)
+			camera->getFramebuffer().bindTextures({ 6 }); // Read from 2nd post processing texture
 		else
-			camera->getFramebuffer().bindTextures({ 1 });
+			camera->getFramebuffer().bindTextures({ 5 }); // Read from 1st post processing texture
 
 		// Get camera position and size onscreen
 		glm::vec2 position = camera->getPosition();

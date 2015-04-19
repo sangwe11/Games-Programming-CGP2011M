@@ -31,8 +31,8 @@ namespace Engine
 		const unsigned int height = display->getHeight();
 
 		// Create a new framebuffer with 5 textures and depth
-		// Textures: Diffuse, Position, Normal, Specular, Final
-		framebuffer = std::make_unique<Framebuffer>(width, height, 5, true);
+		// Textures: Diffuse, Position, Normal, Specular, Final, Post processing 1, post processing 2
+		framebuffer = std::make_unique<Framebuffer>(width, height, 7, true);
 	}
 
 	void Camera::resize(const unsigned int &width, const unsigned int &height)
@@ -40,9 +40,9 @@ namespace Engine
 		// Recalculate projection matrix
 		projection = glm::perspective(DegToRads(fov), (float)width / (float)height, zNear, zFar);
 
-		// Create a new framebuffer with 5 textures and depth
-		// Textures: Diffuse, Position, Normal, Specular, Final
-		framebuffer = std::make_unique<Framebuffer>(width, height, 5, true);
+		// Create a new framebuffer with 7 textures and depth
+		// Textures: Diffuse, Position, Normal, Specular, Final, Post processing 1, post processing 2
+		framebuffer = std::make_unique<Framebuffer>(width, height, 7, true);
 	}
 
 	const glm::mat4 Camera::getView()

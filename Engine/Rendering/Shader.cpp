@@ -8,7 +8,7 @@
 
 namespace Engine
 {
-	bool Shader::load(const std::string &vertexShader, const std::string &fragmentShader, const std::string &geometryShader)
+	bool Shader::load()
 	{
 		std::string linkError, validateError;
 
@@ -16,7 +16,7 @@ namespace Engine
 		program = glCreateProgram();
 
 		// Vertex shader is required
-		if (createShader(vertexShader, GL_VERTEX_SHADER, vertex))
+		if (createShader(name, GL_VERTEX_SHADER, vertex))
 		{
 			// Attach to program
 			glAttachShader(program, vertex);
@@ -29,14 +29,14 @@ namespace Engine
 		}
 
 		// Optional fragment shader
-		if (fragmentShader != "" && createShader(fragmentShader, GL_FRAGMENT_SHADER, fragment))
+		if (createShader(name, GL_FRAGMENT_SHADER, fragment))
 		{
 			// Attach shader to program
 			glAttachShader(program, fragment);
 		}
 
 		// Optional geometry shader
-		if (geometryShader != "" && createShader(geometryShader, GL_GEOMETRY_SHADER, geometry))
+		if (createShader(name, GL_GEOMETRY_SHADER, geometry))
 		{
 			// Attach shader to program
 			glAttachShader(program, geometry);
@@ -357,8 +357,25 @@ namespace Engine
 		std::string ext;
 		std::string compileError;
 
+		// File extension
+		switch (type)
+		{
+		case GL_VERTEX_SHADER:
+			ext = ".vertex";
+			break;
+		case GL_FRAGMENT_SHADER:
+			ext = ".fragment";
+			break;
+		case GL_GEOMETRY_SHADER:
+			ext = ".geometry";
+			break;
+		default:
+			ext = "";
+			break;
+		}
+
 		// Load shader source
-		std::string source = sourceFromFile(name);
+		std::string source = sourceFromFile(name + ext);
 
 		// Check source is not empty
 		if (source == "")

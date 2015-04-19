@@ -71,7 +71,7 @@ namespace Engine
 		glBindVertexArray(vaObject);
 
 		// Setup using shader
-		Shader &shader = files->loadFile<Shader>("shaders/Geometry/mesh_render", "shaders/Geometry/mesh_render.vertex", "shaders/Geometry/mesh_render.fragment");
+		Shader &shader = files->loadFile<Shader>("shaders/Geometry/mesh_render");
 
 		if (shader.getAttrib("vertex", vertexAttrib))
 		{

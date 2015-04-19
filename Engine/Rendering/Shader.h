@@ -13,7 +13,7 @@ namespace Engine
 	class Shader : public File<Shader>
 	{
 	public:
-		virtual bool load(const std::string &vertexShader, const std::string &fragmentShader = "", const std::string &geometryShader = "");
+		virtual bool load();
 		virtual void cleanup();
 
 		const GLuint id() const;

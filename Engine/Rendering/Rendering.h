@@ -25,7 +25,8 @@ namespace Engine
 	private:
 		void meshRender(Camera::Handle &camera);
 		void skyboxRender(Camera::Handle &camera);
-		void finalPass(Camera::Handle &camera);
+		void postProcessing(Camera::Handle &camera, unsigned int &passes);
+		void finalPass(Camera::Handle &camera, const unsigned int &postProcessingPasses);
 
 		// Uniform buffers
 		std::map<std::string, std::unique_ptr<UniformBuffer>> uniformBuffers;
