@@ -1,0 +1,18 @@
+#version 330 core
+
+in vec3 vertex;
+in vec2 uv;
+
+uniform vec2 inverseTextureSize;
+uniform float fxaaShift;
+
+out vec2 uvIn;
+out vec4 posPos;
+
+void main()
+{
+	uvIn = uv;
+	gl_Position = vec4(vertex, 1.0);
+	posPos.xy = uv;
+	posPos.zw = uv - (inverseTextureSize * (0.5 + fxaaShift));
+}

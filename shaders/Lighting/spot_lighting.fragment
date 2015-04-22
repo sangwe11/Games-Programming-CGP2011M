@@ -1,0 +1,85 @@
+#version 330 core
+
+uniform sampler2D Attrib0; // Position
+uniform sampler2D Attrib1; // Normal
+uniform sampler2D Attrib2; // UV
+uniform sampler2D Attrib3; // Diffuse
+
+uniform vec2 screenSize;
+
+struct SpotLight
+{
+	vec3 position;
+	vec3 color;
+	float intensity;
+	float ambient;
+	float radius;
+	float falloff;
+	float coneAngle;
+	vec3 coneDirection;
+};
+
+uniform SpotLight light;
+
+vec2 CalcUV()
+{
+   return gl_FragCoord.xy / screenSize;
+}
+
+float CalcAttenuation(float r, float f, float d)
+{
+	// Simplified lighting attenuation whilst retaining some exponential attenuation for realism
+    return pow(max(0.0, 1.0 - (d / r)), f + 1.0);
+}
+
+vec4 CalculateBaseLighting(vec3 color, float intensity, float ambientIntensity, vec3 direction, vec3 position, vec3 normal)
+{
+
+	// Calculate ambient lighting
+	vec4 ambient = vec4(color, 1.0) * ambientIntensity;
+	
+	// Calculate diffuse lighting
+	vec4 diffuse = vec4(0);
+    float diffuseFactor = dot(normal, direction);
+
+    if (diffuseFactor > 0.0) {
+        diffuse = vec4(color, 1.0) * intensity * diffuseFactor;
+    }
+
+    return (ambient + diffuse);
+}
+
+vec4 CalculateLighting(vec3 position, vec3 normal)
+{
+	// Point light
+	vec3 direction = normalize(light.position - position);
+
+	// Distance from surface to light
+	float distance = length(light.position - position);		
+
+	// Calculate attenuation
+	float attenuation = CalcAttenuation(light.radius, light.falloff, distance);
+	
+	// Calculate lighting
+	vec4 color = CalculateBaseLighting(light.color, light.intensity, light.ambient, direction, position, normal);
+
+	// Clamp attenuation to make into a spotlight
+	float cosine = dot(-direction, normalize(light.coneDirection));
+	float angle = degrees(acos(cosine));
+	attenuation = mix(attenuation, 0.0, angle > light.coneAngle);
+	
+	// Apply attenuation
+    return color * attenuation;
+}
+
+void main()
+{
+
+	vec2 UV = CalcUV();
+
+	vec3 position = texture(Attrib0, UV).xyz;
+	vec3 normal = normalize(texture(Attrib1, UV).xyz);
+	vec3 diffuseColor = texture(Attrib3, UV).xyz;
+
+	gl_FragColor = vec4(diffuseColor, 1.0) * CalculateLighting(position, normal);
+}

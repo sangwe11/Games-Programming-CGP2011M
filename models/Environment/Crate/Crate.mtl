@@ -1,0 +1,9 @@
+newmtl CrateWooden
+Ka 0.100 0.100 0.100
+Kd 0.100 0.100 0.100
+Ks 1.000 1.000 1.000
+Ns 200.000
+d 1.0
+map_Ka crate2_diffuse.jpg
+map_Kd crate2_diffuse.jpg
+map_bump crate2_normal.jpg

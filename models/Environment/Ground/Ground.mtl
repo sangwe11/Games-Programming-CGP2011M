@@ -1,0 +1,8 @@
+newmtl GroundGrass
+Ks 0.000 0.000 0.000
+Ns 0.000
+d 1.0
+illum 2
+map_Ka grass_lush_clover_01_B.png
+map_Kd grass_lush_clover_01_B.png
+map_bump grass_lush_clover_01_N.png
