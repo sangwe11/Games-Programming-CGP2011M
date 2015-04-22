@@ -11,9 +11,22 @@ namespace Engine
 		keystate = SDL_GetKeyboardState(NULL);
 
 		// Default button mapping
-		bindKeyboardButton(SDL_SCANCODE_ESCAPE, "back");
 		bindKeyboardButton(SDL_SCANCODE_SPACE, "jump");
+		bindKeyboardButton(SDL_SCANCODE_BACKSPACE, "back");
+		bindKeyboardButton(SDL_SCANCODE_R, "reload");
+		bindKeyboardButton(SDL_SCANCODE_I, "inventory");
+
+		bindKeyboardButton(SDL_SCANCODE_RETURN, "start");
+		bindKeyboardButton(SDL_SCANCODE_ESCAPE, "quit");
+
+		bindKeyboardButton(SDL_SCANCODE_1, "special1");
+		bindKeyboardButton(SDL_SCANCODE_1, "special2");
+
 		bindKeyboardButton(SDL_SCANCODE_LSHIFT, "sprint");
+		bindKeyboardButton(SDL_SCANCODE_RSHIFT, "sprint");
+		bindKeyboardButton(SDL_SCANCODE_LCTRL, "crouch");
+		bindKeyboardButton(SDL_SCANCODE_RCTRL, "crouch");
+
 		bindMouseButton(SDL_BUTTON_LEFT, "fire");
 		bindMouseButton(SDL_BUTTON_RIGHT, "aim");
 

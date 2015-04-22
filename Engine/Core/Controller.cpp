@@ -12,11 +12,18 @@ namespace Engine
 
 		// Default button mapping
 		bindButton(SDL_CONTROLLER_BUTTON_A, "jump");
-		bindButton(SDL_CONTROLLER_BUTTON_BACK, "back");
+		bindButton(SDL_CONTROLLER_BUTTON_B, "back");
+		bindButton(SDL_CONTROLLER_BUTTON_X, "reload");
+		bindButton(SDL_CONTROLLER_BUTTON_Y, "inventory");
+
 		bindButton(SDL_CONTROLLER_BUTTON_START, "start");
+		bindButton(SDL_CONTROLLER_BUTTON_BACK, "quit");
+
 		bindButton(SDL_CONTROLLER_BUTTON_LEFTSHOULDER, "special1");
 		bindButton(SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, "special2");
+
 		bindButton(SDL_CONTROLLER_BUTTON_LEFTSTICK, "sprint");
+		bindButton(SDL_CONTROLLER_BUTTON_RIGHTSTICK, "crouch");
 
 		// Default axis mapping
 		bindAxis(SDL_CONTROLLER_AXIS_LEFTX, "moveX");
