@@ -30,6 +30,7 @@ namespace Engine
 
 	protected:
 		std::string name;
+		Files *files;
 	};
 
 	template <typename T>
@@ -72,6 +73,7 @@ namespace Engine
 
 				// Store file name
 				file.name = name;
+				file.files = this;
 
 				// Assert the file loaded
 				assert(file.load(std::forward<Args>(args)...));

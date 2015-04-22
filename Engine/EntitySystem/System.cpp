@@ -13,6 +13,16 @@ namespace EntitySystem
 			updateFunctions.insert(std::make_pair(priority, std::make_pair(typeId, function)));
 	}
 
+	void SystemManager::removeAll()
+	{
+		// Uninit all the systems
+		for (auto &system : systems)
+			system->uninitialise();
+
+		// Clear them
+		systems.clear();
+	}
+
 	void SystemManager::update()
 	{
 		// Call each function in the update function list

@@ -139,6 +139,8 @@ namespace EntitySystem
 
 		}
 
+		void removeAll();
+
 		void update();
 		void fixedUpdate();
 

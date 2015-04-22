@@ -5,6 +5,8 @@
 
 #include "Files.h"
 #include "Input.h"
+#include "../Rendering/Display.h"
+#include "../Rendering/Rendering.h"
 
 namespace Engine
 {
@@ -25,14 +27,16 @@ namespace Engine
 		SDL_Quit();
 	}
 
-	void Instance::setup()
+	void Instance::setup(const std::string &title, const unsigned int &width, const unsigned int &height, const bool &fullscreen, const bool &vsync)
 	{
 		// Add systems
 		systems.addSystem<Files>();
 		systems.addSystem<Input>();
+		systems.addSystem<Display>(title, width, height, fullscreen, vsync);
+		systems.addSystem<Rendering>();
 
 		// Check all systems exist
-		if (!systems.systemExists<Files>() || !systems.systemExists<Input>())
+		if (!systems.systemExists<Files>() || !systems.systemExists<Input>() || !systems.systemExists<Display>())
 		{
 			std::cout << "Error creating subsystems." << std::endl;
 			cleanup();
@@ -44,6 +48,9 @@ namespace Engine
 	{
 		// Reset entity world
 		entities.reset();
+
+		// Remove all systems
+		systems.removeAll();
 	}
 
 	void Instance::update()
