@@ -38,6 +38,9 @@ namespace Engine
 
 		// Add spotlight
 		spotlight = entity.addComponent<Engine::SpotLight>(glm::vec3(1.0f), 1.0f, 0.0f, 40.0f, glm::vec3(0.0f, 0.0f, -1.0f), 10.0f, 20.0f);
+
+		// Add player health
+		health = entity.addComponent<PlayerHealth>();		
 	}
 
 	void PlayerController::update()
@@ -124,6 +127,11 @@ namespace Engine
 				spotlight->disable();
 			else
 				spotlight->enable();
+		}
+
+		if (jump)
+		{
+			health->addDamage(10.0f);
 		}
 
 		//// Jumping

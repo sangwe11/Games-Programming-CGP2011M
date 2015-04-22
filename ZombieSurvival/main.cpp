@@ -30,15 +30,14 @@ int main(int argc, char *argv[])
 
 	// Ambient music
 	irrklang::ISound *ambiance =  engine.systems.getSystem<Engine::Audio>()->getAudio()->play2D("sounds/hoard.mp3", true, false, true);
-	ambiance->setVolume(0.005f);
+	ambiance->setVolume(0.02f);
 	ambiance->drop();
 
 	// Create player entity
 	EntitySystem::Entity player = engine.entities.createEntity();
 	player.addComponent<Engine::Transform>(glm::vec3(0.0f, 2.4f, 0.0f), glm::vec3(0.0f), glm::vec3(1.0f));
-	player.addComponent<Engine::Camera>(60.0f, 0.3f, 1000.0f, false, false, glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+	player.addComponent<Engine::Camera>(60.0f, 0.3f, 1000.0f, true, false, glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 	player.addComponent<Engine::Skybox>("textures/Skyboxes/ame_starfield", "starfield_rt.tga", "starfield_lf.tga", "starfield_up.tga", "starfield_dn.tga", "starfield_bk.tga", "starfield_ft.tga");
-	player.addComponent<Engine::UILabel>("Health: 100%", "fonts/Vera.ttf", 22, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), glm::vec2(-0.97f, 0.92f));
 	player.addComponent<Engine::PlayerController>();
 
 	// Ground

@@ -17,6 +17,11 @@ namespace Engine
 		const glm::vec4 &getFontColor() { return fontColor; }
 		const glm::vec2 &getScreenPosition() { return screenPosition; }
 
+		void setText(const std::string &text) { this->text = text; }
+		void setFontSize(const unsigned int &fontSize) { this->fontSize = fontSize; }
+		void setFontColor(const glm::vec4 &fontColor) { this->fontColor = fontColor; }
+		void setScreenPosition(const glm::vec2 &screenPosition) { this->screenPosition = screenPosition; }
+
 	private:
 		std::string text;
 		std::string font;

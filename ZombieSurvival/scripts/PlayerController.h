@@ -7,6 +7,8 @@
 #include <Audio/AudioSource.h>
 #include <Rendering/Light.h>
 
+#include "PlayerHealth.h"
+
 namespace Engine
 {
 	class PlayerController : public Script<PlayerController>
@@ -28,6 +30,7 @@ namespace Engine
 		Transform::Handle transform;
 		Camera::Handle camera;
 		SpotLight::Handle spotlight;
+		PlayerHealth::Handle health;
 
 		// Sound effects
 		AudioSource::Handle jumpSound;

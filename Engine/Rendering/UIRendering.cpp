@@ -38,14 +38,6 @@ namespace Engine
 		glBindVertexArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-		// Load font
-		if (FT_New_Face(ft, "fonts/Vera.ttf", 0, &face))
-			std::cout << "Could not open font" << std::endl;
-
-		// Set font size
-		FT_Set_Pixel_Sizes(face, 0, 20);
-		g = face->glyph;
-
 		// Add function to main
 		addUpdateFunction(&UIRendering::uiRender, *this, 50);
 	}
@@ -85,7 +77,7 @@ namespace Engine
 			shader.setUniform("fontColor", label->getFontColor());
 
 			// Render text
-			renderText(label->getText().c_str(), label->getScreenPosition().x, label->getScreenPosition().y, sx, sy);
+			renderText(label->getText().c_str(), label->getScreenPosition().x, label->getScreenPosition().y, sx, sy, label->getFont().c_str(), label->getFontSize());
 		}
 
 		// Disable blending
@@ -95,10 +87,18 @@ namespace Engine
 		glEnable(GL_DEPTH_TEST);
 	}
 
-	void UIRendering::renderText(const char *text, float x, float y, float sx, float sy) {
+	void UIRendering::renderText(const char *text, float x, float y, float sx, float sy, const char *font, unsigned int size) {
 		const char *p;
 
 		GLuint glGlyph;
+		FT_Face face;
+
+		// Load font
+		if (FT_New_Face(ft, font, 0, &face))
+			std::cout << "Could not open font: " << font << std::endl;
+
+		// Set font size
+		FT_Set_Pixel_Sizes(face, 0, size);
 
 		// Create glyph texture
 		glActiveTexture(GL_TEXTURE0);
@@ -119,12 +119,12 @@ namespace Engine
 			if (FT_Load_Char(face, *p, FT_LOAD_RENDER))
 				continue;
 
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, g->bitmap.width, g->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, g->bitmap.buffer);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
 
-			float x2 = x + g->bitmap_left * sx;
-			float y2 = -y - g->bitmap_top * sy;
-			float w = g->bitmap.width * sx;
-			float h = g->bitmap.rows  * sy;
+			float x2 = x + face->glyph->bitmap_left * sx;
+			float y2 = -y - face->glyph->bitmap_top * sy;
+			float w = face->glyph->bitmap.width * sx;
+			float h = face->glyph->bitmap.rows  * sy;
 
 			GLfloat box[4][4] = {
 				{ x2, -y2, 0, 0 },
@@ -139,8 +139,8 @@ namespace Engine
 			// Draw
 			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-			x += (g->advance.x >> 6) * sx;
-			y += (g->advance.y >> 6) * sy;
+			x += (face->glyph->advance.x >> 6) * sx;
+			y += (face->glyph->advance.y >> 6) * sy;
 		}
 
 		glBindVertexArray(0);
