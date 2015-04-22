@@ -26,8 +26,8 @@ namespace EntitySystem
 		struct Id
 		{
 			Id() : id(0) { }
-			explicit Id(std::uint64_t id) : id(id) { }
-			Id(std::uint32_t index, std::uint32_t version) : id(std::uint64_t(index) | uint64_t(version) << 32UL) { }
+			explicit Id(uint64_t id) : id(id) { }
+			Id(uint32_t index, uint32_t version) : id(uint64_t(index) | uint64_t(version) << 32UL) { }
 
 			uint64_t get() const { return id; }
 
@@ -97,6 +97,12 @@ namespace EntitySystem
 		const typename Component::Handle getComponent() const;
 
 		template <typename Component>
+		typename Component::Handle getComponentInChildren();
+
+		template <typename Component>
+		const typename Component::Handle getComponentInChildren() const;
+
+		template <typename Component>
 		bool hasComponent() const;
 
 		// Destroy entity
@@ -108,10 +114,37 @@ namespace EntitySystem
 			return *manager;
 		}
 
+		void setParent(Entity &entity);
+		void removeParent();
+
+		Entity addChild();
+		void addChild(Entity &entity);
+
+		void removeChild(Entity &entity);
+
+		Entity getParent();
+		std::vector<Entity> getChildren();
+
 	private:
 		EntityManager *manager = nullptr;
 		Id id = invalidId;
 	};
+
+}
+
+// Specialised hash function for Entity::Id
+namespace std {
+	template <> struct hash<EntitySystem::Entity::Id>
+	{
+		size_t operator()(const EntitySystem::Entity::Id & id) const
+		{
+			return std::hash<uint64_t>()(id.get());
+		}
+	};
+}
+
+namespace EntitySystem
+{
 
 	template <typename Component>
 	class ComponentHandle
@@ -202,15 +235,18 @@ namespace EntitySystem
 		Entity createEntity();
 
 		// Create a new entity from template class
-		Entity createEntityFromTemplate(EntityTemplate &entityTemplate)
-		{
-			// Create a new entity
-			Entity entity = createEntity();
+		Entity createEntityFromTemplate(EntityTemplate &entityTemplate);
 
-			// Setup using template
-			entityTemplate.build(entity, *this);
-			return entity;
-		}
+		void setParent(Entity::Id entity, Entity::Id parent);
+		void removeParent(Entity::Id entity);
+
+		Entity addChild(Entity::Id entity);
+		void addChild(Entity::Id entity, Entity::Id child);
+
+		void removeChild(Entity::Id entity, Entity::Id child);
+
+		Entity getParent(Entity::Id entity);
+		std::vector<Entity> getChildren(Entity::Id entity);
 
 		// Destroy an entity
 		void destroyEntity(Entity::Id entity);
@@ -369,7 +405,13 @@ namespace EntitySystem
 		std::vector<std::uint32_t> versions;
 
 		// List of free entity indexes
-		std::vector<std::uint32_t> free;
+		std::vector<std::uint32_t> free; 
+
+		// List of entity parents
+		std::unordered_map<Entity::Id, Entity::Id> parents;
+
+		// List of entity children
+		std::unordered_map<Entity::Id, std::vector<Entity::Id>> children;
 
 		// Reference to entity world
 		World &world;
@@ -401,6 +443,30 @@ namespace EntitySystem
 	{
 		//assert(valid() && hasComponent<Component>());
 		return manager->getComponentFromEntity<const Component>(id);
+	}
+
+	template <typename Component>
+	typename Component::Handle Entity::getComponentInChildren()
+	{
+		for (Entity &child : manager->getChildren(id))
+		{
+			if (child.hasComponent<Component>())
+				return child.getComponent<Component>();
+		}
+
+		return Component::Handle();
+	}
+
+	template <typename Component>
+	const typename Component::Handle Entity::getComponentInChildren() const
+	{
+		for (Entity &child : manager->getChildren(id))
+		{
+			if (child.hasComponent<Component>())
+				return child.getComponent<const Component>();
+		}
+
+		return Component::Handle();
 	}
 
 	template <typename Component>
@@ -464,5 +530,6 @@ namespace EntitySystem
 		return manager->removeComponentFromEntity<Component>(entity);
 	}
 }
+
 
 #endif
