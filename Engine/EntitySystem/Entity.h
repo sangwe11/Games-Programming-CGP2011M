@@ -85,42 +85,19 @@ namespace EntitySystem
 		Id getId() const { return id; }
 
 		template <typename Component, typename ... Args>
-		typename Component::Handle addComponent(Args && ... args)
-		{
-			//assert(valid());
-			return manager->addComponentToEntity<Component>(id, std::forward<Args>(args) ...);
-		}
+		typename Component::Handle addComponent(Args && ... args);
 
 		template <typename Component>
-		void removeComponent()
-		{
-			//assert(valid() && hasComponent<Component>());
-			manager->removeComponentFromEntity<Component>(id);
-		}
+		void removeComponent();
 
 		template <typename Component>
-		typename Component::Handle getComponent()
-		{
-			//assert(valid() && hasComponent<Component>());
-			if (!valid())
-				std::cout << "fail.." << std::endl;
-
-			return manager->getComponentFromEntity<Component>(id);
-		}
+		typename Component::Handle getComponent();
 
 		template <typename Component>
-		const typename Component::Handle getComponent() const
-		{
-			//assert(valid() && hasComponent<Component>());
-			return manager->getComponentFromEntity<const Component>(id);
-		}
+		const typename Component::Handle getComponent() const;
 
 		template <typename Component>
-		bool hasComponent() const
-		{
-			//assert(valid());
-			return manager->entityHasComponent<Component>(id);
-		}
+		bool hasComponent() const;
 
 		// Destroy entity
 		void destroy();
@@ -144,51 +121,14 @@ namespace EntitySystem
 		ComponentHandle() : manager(nullptr) { }
 		ComponentHandle(Entity::Id entity, EntityManager *manager) : entity(entity), manager(manager) { }
 
-		bool valid() const
-		{
-			return manager && manager->valid(entity) && manager->entityHasComponent<Component>(entity);
-		}
-
-		operator bool() const
-		{
-			return valid();
-		}
-
-		Component *operator->()
-		{
-			assert(valid());
-			return &manager->getComponent<Component>(entity);
-		}
-
-		const Component *operator->() const
-		{
-			assert(valid());
-			return &manager->getComponent<Component>(entity);
-		}
-
-		Component &get()
-		{
-			assert(valid());
-			return manager->getComponent<Component>(entity);
-		}
-
-		const Component &get() const
-		{
-			assert(valid());
-			return manager->getComponent<Component>(entity);
-		}
-
-		Entity getEntity()
-		{
-			assert(valid());
-			return manager->getEntity(entity);
-		}
-
-		void remove()
-		{
-			assert(valid());
-			return manager->removeComponentFromEntity<Component>(entity);
-		}
+		bool valid() const;
+		operator bool() const;
+		Component *operator->();
+		const Component *operator->() const;
+		Component &get();
+		const Component &get() const;
+		Entity getEntity();
+		void remove();
 
 		bool operator==(const ComponentHandle<Component> &other) const
 		{
@@ -383,8 +323,9 @@ namespace EntitySystem
 					{
 						// Loop through component type and add to found if enabled (or if we don't care if the component is enabled)
 						for (unsigned int i = 0; i < pair.second.size(); ++i)
-							if ((enabledOnly && pair.second[i]->enabled) || !enabledOnly)
-								found.emplace_back(pair.second[i]->entity, pair.second[i]->manager);
+							if (pair.second[i] != nullptr)
+								if ((enabledOnly && pair.second[i]->enabled) || !enabledOnly)
+									found.emplace_back(pair.second[i]->entity.getId(), pair.second[i]->manager);
 					}
 				}
 			}
@@ -434,6 +375,94 @@ namespace EntitySystem
 		World &world;
 	};
 
+	template <typename Component, typename ... Args>
+	typename Component::Handle Entity::addComponent(Args && ... args)
+	{
+		//assert(valid());
+		return manager->addComponentToEntity<Component>(id, std::forward<Args>(args) ...);
+	}
+
+	template <typename Component>
+	void Entity::removeComponent()
+	{
+		//assert(valid() && hasComponent<Component>());
+		manager->removeComponentFromEntity<Component>(id);
+	}
+
+	template <typename Component>
+	typename Component::Handle Entity::getComponent()
+	{
+		//assert(valid() && hasComponent<Component>());
+		return manager->getComponentFromEntity<Component>(id);
+	}
+
+	template <typename Component>
+	const typename Component::Handle Entity::getComponent() const
+	{
+		//assert(valid() && hasComponent<Component>());
+		return manager->getComponentFromEntity<const Component>(id);
+	}
+
+	template <typename Component>
+	bool Entity::hasComponent() const
+	{
+		//assert(valid());
+		return manager->entityHasComponent<Component>(id);
+	}
+
+	template <typename Component>
+	bool ComponentHandle<Component>::valid() const
+	{
+		return manager && manager->valid(entity) && manager->entityHasComponent<Component>(entity);
+	}
+
+	template <typename Component>
+	ComponentHandle<Component>::operator bool() const
+	{
+		return valid();
+	}
+
+	template <typename Component>
+	Component *ComponentHandle<Component>::operator->()
+	{
+		assert(valid());
+		return &manager->getComponent<Component>(entity);
+	}
+
+	template <typename Component>
+	const Component *ComponentHandle<Component>::operator->() const
+	{
+		assert(valid());
+		return &manager->getComponent<Component>(entity);
+	}
+
+	template <typename Component>
+	Component &ComponentHandle<Component>::get()
+	{
+		assert(valid());
+		return manager->getComponent<Component>(entity);
+	}
+
+	template <typename Component>
+	const Component &ComponentHandle<Component>::get() const
+	{
+		assert(valid());
+		return manager->getComponent<Component>(entity);
+	}
+
+	template <typename Component>
+	Entity ComponentHandle<Component>::getEntity()
+	{
+		assert(valid());
+		return manager->getEntity(entity);
+	}
+
+	template <typename Component>
+	void ComponentHandle<Component>::remove()
+	{
+		assert(valid());
+		return manager->removeComponentFromEntity<Component>(entity);
+	}
 }
 
 #endif
