@@ -189,7 +189,7 @@ namespace EntitySystem
 
 		// Delete all components
 		for (auto &pair : components)
-			pair.second[id.index()].clear();
+			pair.second[id.index()] = nullptr;
 	}
 
 	Entity EntityManager::getEntity(Entity::Id id)

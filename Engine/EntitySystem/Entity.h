@@ -399,7 +399,7 @@ namespace EntitySystem
 		std::uint32_t nextIndex = 0;
 
 		// Components are stored in a vector per component type for cache contiguous
-		std::unordered_map <TypeId, std::vector<std::vector<std::unique_ptr<BaseComponent>>>> components;
+		std::unordered_map <TypeId, std::vector<std::unique_ptr<BaseComponent>>> components;
 
 		// List of entity versions
 		std::vector<std::uint32_t> versions;
@@ -443,6 +443,30 @@ namespace EntitySystem
 	{
 		//assert(valid() && hasComponent<Component>());
 		return manager->getComponentFromEntity<const Component>(id);
+	}
+
+	template <typename Component>
+	typename Component::Handle Entity::getComponentInChildren()
+	{
+		for (Entity &child : manager->getChildren(id))
+		{
+			if (child.hasComponent<Component>())
+				return child.getComponent<Component>();
+		}
+
+		return Component::Handle();
+	}
+
+	template <typename Component>
+	const typename Component::Handle Entity::getComponentInChildren() const
+	{
+		for (Entity &child : manager->getChildren(id))
+		{
+			if (child.hasComponent<Component>())
+				return child.getComponent<const Component>();
+		}
+
+		return Component::Handle();
 	}
 
 	template <typename Component>
