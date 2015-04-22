@@ -33,7 +33,7 @@ solution "Games-Programming-CGP2011M"
 		libdirs { "./libraries/" }
 		
 		configuration "windows"
-			links { "SDL/SDL2", "SDL/SDL2main", "SDL/SDL2_image", "ASSIMP/assimp", "opengl32", "GLEW/glew32", "freetype/freetype" }
+			links { "SDL/SDL2", "SDL/SDL2main", "SDL/SDL2_image", "ASSIMP/assimp", "opengl32", "GLEW/glew32", "freetype/freetype", "irrKlang-1.5.0/irrKlang" }
 		configuration "linux"
 			links { "SDL2", "SDL2main", "SDL2_image", "assimp", "GL", "GLEW", "freetype" }
 		configuration {}
@@ -57,7 +57,7 @@ solution "Games-Programming-CGP2011M"
 		links { "Engine" }
 		
 		configuration "windows"
-			links { "SDL/SDL2", "SDL/SDL2main", "SDL/SDL2_image", "ASSIMP/assimp", "opengl32", "GLEW/glew32", "freetype/freetype" }
+			links { "SDL/SDL2", "SDL/SDL2main", "SDL/SDL2_image", "ASSIMP/assimp", "opengl32", "GLEW/glew32", "freetype/freetype", "irrKlang-1.5.0/irrKlang" }
 		configuration "linux"
 			links { "SDL2", "SDL2main", "SDL2_image", "assimp", "GL", "GLEW", "freetype" }
 		configuration {}
