@@ -16,12 +16,6 @@ solution "Games-Programming-CGP2011M"
 	configuration { "linux" }
 		defines { "LINUX" }
 	configuration {}
-	
-	configuration "windows"
-		links { "SDL/SDL2", "SDL/SDL2main", "opengl32", "GLEW/glew32" }
-	configuration "linux"
-		links { "SDL2", "SDL2main", "GL", "GLEW" }
-	configuration {}
 
 	project "Engine"
 		language "C++"
@@ -37,6 +31,12 @@ solution "Games-Programming-CGP2011M"
 		
 		includedirs { "./includes/" }
 		libdirs { "./libraries/" }
+		
+		configuration "windows"
+			links { "SDL/SDL2", "SDL/SDL2main", "SDL/SDL2_image", "ASSIMP/assimp", "opengl32", "GLEW/glew32", "freetype/freetype", "irrKlang-1.5.0/irrKlang" }
+		configuration "linux"
+			links { "SDL2", "SDL2main", "SDL2_image", "assimp", "GL", "GLEW", "freetype" }
+		configuration {}
 		
 	project "ZombieSurvival"
 		language "C++"
@@ -55,3 +55,9 @@ solution "Games-Programming-CGP2011M"
 		
 		-- Link to Engine static library
 		links { "Engine" }
+		
+		configuration "windows"
+			links { "SDL/SDL2", "SDL/SDL2main", "SDL/SDL2_image", "ASSIMP/assimp", "opengl32", "GLEW/glew32", "freetype/freetype", "irrKlang-1.5.0/irrKlang" }
+		configuration "linux"
+			links { "SDL2", "SDL2main", "SDL2_image", "assimp", "GL", "GLEW", "freetype" }
+		configuration {}
