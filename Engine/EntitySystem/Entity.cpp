@@ -1,6 +1,7 @@
 #include "Entity.h"
 
 #include <assert.h>
+#include <algorithm>
 
 namespace EntitySystem
 {
@@ -22,6 +23,41 @@ namespace EntitySystem
 		assert(valid());
 		manager->destroyEntity(id);
 		invalidate();
+	}
+
+	void Entity::setParent(Entity &entity)
+	{
+		manager->setParent(id, entity.id);
+	}
+
+	void Entity::removeParent()
+	{
+		manager->removeParent(id);
+	}
+
+	Entity Entity::addChild()
+	{
+		return manager->addChild(id);
+	}
+
+	void Entity::addChild(Entity &entity)
+	{
+		manager->addChild(id, entity.id);
+	}
+
+	void Entity::removeChild(Entity &entity)
+	{
+		manager->removeChild(id, entity.id);
+	}
+
+	Entity Entity::getParent()
+	{
+		return manager->getParent(id);
+	}
+
+	std::vector<Entity> Entity::getChildren()
+	{
+		return manager->getChildren(id);
 	}
 
 	EntityManager::~EntityManager()
@@ -59,6 +95,86 @@ namespace EntitySystem
 		Entity entity(Entity::Id(index, version), this);
 
 		return entity;
+	}
+
+	Entity EntityManager::createEntityFromTemplate(EntityTemplate &entityTemplate)
+	{
+		// Create a new entity
+		Entity entity = createEntity();
+
+		// Setup using template
+		entityTemplate.build(entity, *this);
+		return entity;
+	}
+
+	void EntityManager::setParent(Entity::Id entity, Entity::Id parent)
+	{
+		// Check for existing parent
+		if (parents[entity] != Entity::invalidId)
+		{
+			// Remove from current parent child list
+			removeChild(parents[entity], entity);
+		}
+
+		// Set new parent
+		parents[entity] = parent;
+
+		// Add child to parents children
+		children[parent].push_back(entity);
+	}
+
+	void EntityManager::removeParent(Entity::Id entity)
+	{
+		// Check for existing parent
+		if (parents[entity] != Entity::invalidId)
+		{
+			// Remove from current parent child list
+			removeChild(parents[entity], entity);
+		}
+
+		parents[entity] = Entity::invalidId;
+	}
+
+	Entity EntityManager::addChild(Entity::Id entity)
+	{
+		// Create new entity
+		Entity child = createEntity();
+
+		// Parent e to entity
+		setParent(child.getId(), entity);
+
+		return child;
+	}
+
+	void EntityManager::addChild(Entity::Id entity, Entity::Id child)
+	{
+		// Parent child to entity
+		setParent(child, entity);
+	}
+
+	void EntityManager::removeChild(Entity::Id entity, Entity::Id child)
+	{
+		// Remove child from entity
+		children[entity].erase(std::remove(children[entity].begin(), children[entity].end(), child), children[entity].end());
+
+		// Remove childs parent
+		parents[child] = Entity::invalidId;
+	}
+
+	Entity EntityManager::getParent(Entity::Id entity)
+	{
+		return Entity(parents[entity], this);
+	}
+
+	std::vector<Entity> EntityManager::getChildren(Entity::Id entity)
+	{
+		std::vector<Entity> found;
+
+		// Convert Entity::Id list into Entity list
+		for (Entity::Id &id : children[entity])
+			found.emplace_back(id, this);
+
+		return found;
 	}
 
 	void EntityManager::destroyEntity(Entity::Id id)
