@@ -80,7 +80,6 @@ namespace Engine
 
 			// Unbind framebuffer
 			framebuffer.unbind(true, true);
-
 		}
 	}
 
