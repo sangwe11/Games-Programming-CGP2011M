@@ -44,13 +44,7 @@ int main(int argc, char *argv[])
 	// Ground
 	EntitySystem::Entity ground = engine.entities.createEntity();
 	ground.addComponent<Engine::Transform>(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(1.0f));
-	//ground.addComponent<Engine::MeshRenderer>("models/Environment/Ground/Ground.obj");
-
-	// Create crate entity
-	EntitySystem::Entity crate = engine.entities.createEntity();
-	crate.addComponent<Engine::Transform>(glm::vec3(0.0f, -12.0f, 0.0f), glm::vec3(0.0f, AI_DEG_TO_RAD(45.0f), 0.0f), glm::vec3(0.2f));
-	crate.addComponent<Engine::MeshRenderer>("models/Environment/old fashion town/old town block.obj");
-	//crate.addComponent<Engine::AudioSource>("sounds/poltergeist.wav", 40, true, true)->play();
+	ground.addComponent<Engine::MeshRenderer>("models/Environment/Ground/Ground.obj");
 
 	// Create sun entity
 	EntitySystem::Entity sun = engine.entities.createEntity();
