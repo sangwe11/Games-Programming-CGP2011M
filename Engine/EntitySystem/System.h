@@ -30,14 +30,7 @@ namespace EntitySystem
 
 		// Add function to main update loop
 		template <typename T>
-		void addUpdateFunction(void(T::*function)(), T &system, const int &priority, const bool &fixed = false)
-		{
-			// Bind function
-			std::function<void()> call = std::bind(function, &system);
-
-			// Add function
-			manager->addUpdateFunction(T::getTypeId(), call, priority, fixed);
-		}
+		void addUpdateFunction(void(T::*function)(), T &system, const int &priority, const bool &fixed = false);
 
 		// Get manager system belongs to
 		SystemManager &getManager()
@@ -139,6 +132,8 @@ namespace EntitySystem
 
 		}
 
+		void removeAll();
+
 		void update();
 		void fixedUpdate();
 
@@ -233,6 +228,14 @@ namespace EntitySystem
 		SystemManager *manager;
 	};
 
+	template <typename T>
+	void BaseSystem::addUpdateFunction(void(T::*function)(), T &system, const int &priority, const bool &fixed)
+	{
+		// Bind function
+		std::function<void()> call = std::bind(function, &system);
 
+		// Add function
+		manager->addUpdateFunction(T::getTypeId(), call, priority, fixed);
+	}
 }
 #endif
