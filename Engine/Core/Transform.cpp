@@ -23,8 +23,13 @@ namespace Engine
 		glm::mat4 positionMatrix = glm::translate(position);
 		glm::mat4 rotationMatrix = glm::mat4_cast(rotation);
 		glm::mat4 scaleMatrix = glm::scale(scale);
+		glm::mat4 parentModelMatrix = glm::mat4();
 
-		return positionMatrix * rotationMatrix * scaleMatrix;
+		// Parent rotation?
+		if (parent.valid())
+			parentModelMatrix = parent->getModelMatrix();
+
+		return parentModelMatrix * positionMatrix * rotationMatrix * scaleMatrix;
 	}
 
 	const glm::quat &Transform::getRotation() const
@@ -87,5 +92,10 @@ namespace Engine
 		yaxis = glm::normalize(view * glm::vec3(0.0f, 1.0f, 0.0f));
 		zaxis = glm::normalize(view * glm::vec3(0.0f, 0.0f, 1.0f));
 
+	}
+
+	void Transform::setParent(Transform::Handle &transform)
+	{
+		parent = transform;
 	}
 }

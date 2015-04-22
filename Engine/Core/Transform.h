@@ -25,6 +25,8 @@ namespace Engine
 		void rotateLocal(const float &amount, const glm::vec3 &axis);
 		void rotateGlobal(const float &amount, const glm::vec3 &axis);
 
+		void setParent(Transform::Handle &transform);
+
 		glm::vec3 position;
 		glm::vec3 scale;
 
@@ -34,6 +36,8 @@ namespace Engine
 		glm::vec3 xaxis;
 		glm::vec3 yaxis;
 		glm::vec3 zaxis;
+
+		Transform::Handle parent;
 
 		void calculateAxis();
 	};
