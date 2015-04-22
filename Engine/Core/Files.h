@@ -28,6 +28,8 @@ namespace Engine
 		// Optional cleanup function
 		virtual void cleanup() { }
 
+		const std::string &getName() { return name; }
+
 	protected:
 		std::string name;
 		Files *files;
@@ -75,8 +77,11 @@ namespace Engine
 				file.name = name;
 				file.files = this;
 
+				// Load the file
+				bool loaded = file.load(std::forward<Args>(args)...);
+
 				// Assert the file loaded
-				assert(file.load(std::forward<Args>(args)...));
+				assert(loaded);
 
 				// Print debug message
 				std::cout << "Loaded file: " << name << std::endl;
