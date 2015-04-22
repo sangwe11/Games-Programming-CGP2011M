@@ -6,6 +6,16 @@
 
 namespace Engine
 {
+	UIFont::UIFont(FT_Face &face)
+	{
+		this->face = face;
+	}
+
+	bool UIFont::setGlyph(const char* character)
+	{
+		return (FT_Load_Char(face, *character, FT_LOAD_RENDER) == 0);
+	}
+
 	void UIRendering::initialise()
 	{
 		// Initialise Freetype
@@ -87,18 +97,45 @@ namespace Engine
 		glEnable(GL_DEPTH_TEST);
 	}
 
-	void UIRendering::renderText(const char *text, float x, float y, float sx, float sy, const char *font, unsigned int size) {
+	UIFont &UIRendering::loadFont(const std::string &font, const unsigned int &size)
+	{
+		// Use the loaded font
+		if (fonts.find(font) != fonts.end())
+		{
+			// Set font size
+			FT_Set_Pixel_Sizes(fonts[font]->get(), 0, size);
+
+			return *fonts[font];
+		}
+		// Else load the font
+		else
+		{
+			FT_Face face;
+
+			// Load the font
+			int error = FT_New_Face(ft, font.c_str(), 0, &face);
+
+			// Assert the font loaded
+			assert(error == 0);
+
+			// Set font size
+			FT_Set_Pixel_Sizes(face, 0, size);
+
+			// Create UI font
+			fonts[font] = std::unique_ptr<UIFont>(new UIFont(face));
+
+			// Return
+			return *fonts[font];
+		}
+	}
+
+	void UIRendering::renderText(const char *text, float x, float y, float sx, float sy, std::string font, unsigned int size) {
 		const char *p;
 
 		GLuint glGlyph;
-		FT_Face face;
 
 		// Load font
-		if (FT_New_Face(ft, font, 0, &face))
-			std::cout << "Could not open font: " << font << std::endl;
-
-		// Set font size
-		FT_Set_Pixel_Sizes(face, 0, size);
+		UIFont &uiFont = loadFont(font, size);
 
 		// Create glyph texture
 		glActiveTexture(GL_TEXTURE0);
@@ -116,15 +153,16 @@ namespace Engine
 
 		for (p = text; *p; p++)
 		{
-			if (FT_Load_Char(face, *p, FT_LOAD_RENDER))
+			// Set the current glyph
+			if (!uiFont.setGlyph(p))
 				continue;
 
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, uiFont.get()->glyph->bitmap.width, uiFont.get()->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, uiFont.get()->glyph->bitmap.buffer);
 
-			float x2 = x + face->glyph->bitmap_left * sx;
-			float y2 = -y - face->glyph->bitmap_top * sy;
-			float w = face->glyph->bitmap.width * sx;
-			float h = face->glyph->bitmap.rows  * sy;
+			float x2 = x + uiFont.get()->glyph->bitmap_left * sx;
+			float y2 = -y - uiFont.get()->glyph->bitmap_top * sy;
+			float w = uiFont.get()->glyph->bitmap.width * sx;
+			float h = uiFont.get()->glyph->bitmap.rows  * sy;
 
 			GLfloat box[4][4] = {
 				{ x2, -y2, 0, 0 },
@@ -139,8 +177,8 @@ namespace Engine
 			// Draw
 			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-			x += (face->glyph->advance.x >> 6) * sx;
-			y += (face->glyph->advance.y >> 6) * sy;
+			x += (uiFont.get()->glyph->advance.x >> 6) * sx;
+			y += (uiFont.get()->glyph->advance.y >> 6) * sy;
 		}
 
 		glBindVertexArray(0);

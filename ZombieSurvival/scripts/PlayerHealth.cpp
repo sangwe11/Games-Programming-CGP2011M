@@ -28,7 +28,7 @@ void PlayerHealth::onAwake()
 void PlayerHealth::update()
 {
 	// Regenerate health?
-	if (regenerate)
+	if (regenerate && currentHealth < maxHealth)
 		currentHealth += regenerateRate * manager->getWorld().systems.getSystem<Engine::Time>()->getDeltaTime();
 
 	// Update health label

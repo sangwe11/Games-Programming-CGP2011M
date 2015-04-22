@@ -9,6 +9,18 @@
 
 namespace Engine
 {
+	class UIFont
+	{
+	public:
+		UIFont(FT_Face &face);
+
+		FT_Face &get() { return face; }
+		bool setGlyph(const char* character);
+
+	private:
+		FT_Face face;
+	};
+
 	class UIRendering : public EntitySystem::System<UIRendering>
 	{
 	public:
@@ -17,8 +29,10 @@ namespace Engine
 
 		void uiRender();
 
+		UIFont &loadFont(const std::string &font, const unsigned int &size);
+
 	private:
-		void renderText(const char *text, float x, float y, float sx, float sy, const char *font, unsigned int size);
+		void renderText(const char *text, float x, float y, float sx, float sy, std::string font, unsigned int size);
 
 		// Freetype library
 		FT_Library ft;
@@ -26,6 +40,9 @@ namespace Engine
 		// vertex buffer and vaObject for drawing glyphs
 		GLuint bufferGlyph;
 		GLuint vaObject;
+
+		// Loaded fonts
+		std::map<std::string, std::unique_ptr<UIFont>> fonts;
 	};
 }
 
