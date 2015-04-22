@@ -149,10 +149,10 @@ namespace Engine
 		UniformBuffer &transformBuffer = getUniformBuffer("transformUniforms");
 
 		// Get transform component
-		Transform::Handle &transform = skybox->entity.getComponent<Transform>();
+		Transform::Handle transform = skybox->entity.getComponent<Transform>();
 
-		// Get model matrix
-		glm::mat4 t = transform->getModelMatrix();
+		// Create model matrix from position
+		glm::mat4 t = glm::translate(transform->position);
 
 		// Buffer uniform data
 		glBindBuffer(GL_UNIFORM_BUFFER, transformBuffer.getBuffer());
