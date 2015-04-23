@@ -77,7 +77,7 @@ namespace Engine
 		else
 		{
 			// Set variables
-			//sound->setSoundStopEventReceiver(&source, nullptr);
+			sound->setSoundStopEventReceiver(&source, nullptr);
 			sound->setVolume(source.volume / 100.0f);
 
 			// Unpause
