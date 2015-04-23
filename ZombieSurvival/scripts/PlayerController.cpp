@@ -24,9 +24,11 @@ namespace Engine
 
 	void PlayerController::onAwake()
 	{
-		// Get transform and camera components
+		// Get components
 		transform = entity.getComponent<Transform>();
-		camera = entity.getComponent<Camera>();
+		camera = entity.getComponentInChildren<Camera>();
+		cameraTransform = camera.getEntity().getComponent<Transform>();
+		torch = camera.getEntity().getComponentInChildren<PlayerTorch>();
 
 		// Add audio listener
 		entity.addComponent<Engine::AudioListener>();
@@ -36,10 +38,7 @@ namespace Engine
 		//jumpSound = entity.addComponent<AudioSource>("Player/JumpSound.wav", 20);
 		//nightVisionSound = entity.addComponent<AudioSource>("Player/NightVisionWarmUp.mp3", 20);
 
-		// Add spotlight
-		spotlight = entity.addComponent<Engine::SpotLight>(glm::vec3(1.0f), 1.0f, 0.0f, 40.0f, glm::vec3(0.0f, 0.0f, -1.0f), 10.0f, 20.0f);
-
-		// Add player health
+		// Add player health script
 		health = entity.addComponent<PlayerHealth>();		
 	}
 
@@ -107,31 +106,30 @@ namespace Engine
 
 			// Add movement
 			if (sprint)
-				transform->position += direction * 6.0f * deltaTime;
+				transform->position += direction * runSpeed * deltaTime;
 			else
-				transform->position += direction * 4.0f * deltaTime;
+				transform->position += direction * walkSpeed * deltaTime;
 		}
 		else
 		{
 			footstepSound->stop();
 		}
 
-		// Rotate camera on look axis
+		// Rotate camera on vertical axis
+		cameraTransform->rotateLocal(look.y * -2.0f * deltaTime, glm::vec3(1.0f, 0.0f, 0.0f));
+
+		// Rotate player on horizontal axis
 		transform->rotateGlobal(look.x * -2.0f * deltaTime, glm::vec3(0.0f, 1.0f, 0.0f));
-		transform->rotateLocal(look.y * -2.0f * deltaTime, glm::vec3(1.0f, 0.0f, 0.0f));
 
 		// Toggle light
 		if (toggleLight)
 		{
-			if (spotlight->isEnabled())
-				spotlight->disable();
-			else
-				spotlight->enable();
+			torch->toggle();
 		}
 
 		if (jump)
 		{
-			health->addDamage(10.0f);
+			entity.getManager().getTaggedEntity("zombie").destroy();
 		}
 
 		//// Jumping

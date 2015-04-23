@@ -14,6 +14,7 @@ public:
 
 	const bool getAlive() const { return alive; }
 	void addDamage(const float &damage) { currentHealth -= damage; }
+	void addHealth(const float &amount) { currentHealth += amount; }
 
 private:
 	// Settings

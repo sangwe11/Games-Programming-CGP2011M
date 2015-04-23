@@ -8,6 +8,7 @@
 #include <Rendering/Light.h>
 
 #include "PlayerHealth.h"
+#include "PlayerTorch.h"
 
 namespace Engine
 {
@@ -19,6 +20,8 @@ namespace Engine
 		virtual void onAwake();
 		virtual void update();
 
+		PlayerHealth::Handle &getHealth() { return health; }
+
 	private:
 		// Settings
 		float walkSpeed;
@@ -29,8 +32,9 @@ namespace Engine
 		// Components
 		Transform::Handle transform;
 		Camera::Handle camera;
-		SpotLight::Handle spotlight;
+		Transform::Handle cameraTransform;
 		PlayerHealth::Handle health;
+		PlayerTorch::Handle torch;
 
 		// Sound effects
 		AudioSource::Handle jumpSound;
