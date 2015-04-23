@@ -11,12 +11,16 @@ namespace Engine
 	public:
 		Transform(glm::vec3 position, glm::vec3 eulerAngles, glm::vec3 scale);
 
-		const glm::mat4 getModelMatrix() const;
+		const glm::mat4 getModelMatrix();
+		const glm::mat4 getParentModelMatrix();
 		const glm::quat &getRotation() const;
 		const glm::vec3 &getEulers() const;
 		const glm::vec3 &getXAxis() const;
 		const glm::vec3 &getYAxis() const;
 		const glm::vec3 &getZAxis() const;
+
+		const glm::vec3 positionWorld() { return glm::vec3(getParentModelMatrix() * glm::vec4(position, 1.0f)); }
+		const glm::quat rotationWorld() { return glm::quat(getParentModelMatrix()) * rotation; }
 
 		const glm::vec3 forward() { return -zaxis; }
 		const glm::vec3 right() { return xaxis; }
@@ -29,9 +33,9 @@ namespace Engine
 
 		glm::vec3 position;
 		glm::vec3 scale;
+		glm::quat rotation;
 
 	private:
-		glm::quat rotation;
 		glm::vec3 eulerAngles;
 		glm::vec3 xaxis;
 		glm::vec3 yaxis;

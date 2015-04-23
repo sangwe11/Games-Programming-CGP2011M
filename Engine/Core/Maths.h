@@ -6,6 +6,7 @@
 
 #include <GLM/glm.hpp>
 #include <GLM/gtc/quaternion.hpp>
+#include <GLM/gtx/rotate_vector.hpp>
 
 namespace Engine
 {

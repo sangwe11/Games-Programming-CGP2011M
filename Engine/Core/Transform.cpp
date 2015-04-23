@@ -18,7 +18,7 @@ namespace Engine
 		rotateLocal(eulerAngles.x, glm::vec3(1.0f, 0.0f, 0.0f));
 	}
 
-	const glm::mat4 Transform::getModelMatrix() const
+	const glm::mat4 Transform::getModelMatrix()
 	{
 		glm::mat4 positionMatrix = glm::translate(position);
 		glm::mat4 rotationMatrix = glm::mat4_cast(rotation);
@@ -26,10 +26,21 @@ namespace Engine
 		glm::mat4 parentModelMatrix = glm::mat4();
 
 		// Parent rotation?
-		if (parent.valid())
-			parentModelMatrix = parent->getModelMatrix();
+		if (entity.getParent().valid())
+			parentModelMatrix = entity.getParent().getComponent<Transform>()->getModelMatrix();
 
 		return parentModelMatrix * positionMatrix * rotationMatrix * scaleMatrix;
+	}
+
+	const glm::mat4 Transform::getParentModelMatrix()
+	{
+		glm::mat4 parentModelMatrix = glm::mat4();
+
+		// Parent rotation?
+		if (entity.getParent().valid())
+			parentModelMatrix = entity.getParent().getComponent<Transform>()->getModelMatrix();
+
+		return parentModelMatrix;
 	}
 
 	const glm::quat &Transform::getRotation() const

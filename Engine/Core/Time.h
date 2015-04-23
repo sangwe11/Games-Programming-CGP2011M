@@ -18,6 +18,7 @@ namespace Engine
 	private:
 		float deltaTime = 0.0f;
 		unsigned int lastTime = 0;
+		bool first = true;
 
 		// TODO: fixed timestepping for Physics
 		//float fixedDeltaTime = 0.0f;

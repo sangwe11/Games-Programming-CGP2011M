@@ -18,6 +18,16 @@ namespace EntitySystem
 		manager = nullptr;
 	}
 
+	void Entity::tag(const Entity::Tag &tag)
+	{
+		manager->tagEntity(id, tag);
+	}
+
+	bool Entity::tagged(const Entity::Tag &tag)
+	{
+		return manager->entityIsTagged(id, tag);
+	}
+
 	void Entity::destroy()
 	{
 		assert(valid());
@@ -107,6 +117,56 @@ namespace EntitySystem
 		return entity;
 	}
 
+	void EntityManager::tagEntity(Entity::Id entity, const Entity::Tag &tag)
+	{
+		if (!entityIsTagged(entity, tag))
+			tags[tag].push_back(entity);
+	}
+
+	void EntityManager::tagEntity(Entity::Id entity, const Entity::Tags &tags)
+	{
+		for (const Entity::Tag &tag : tags)
+			if (!entityIsTagged(entity, tag))
+				this->tags[tag].push_back(entity);
+	}
+
+	const bool EntityManager::entityIsTagged(Entity::Id entity, const Entity::Tag &tag)
+	{
+		if (std::find(tags[tag].begin(), tags[tag].end(), entity) != tags[tag].end())
+			return true;
+		else
+			return false;
+	}
+
+	const bool EntityManager::entityIsTagged(Entity::Id entity, const Entity::Tags &tags)
+	{
+		for (const Entity::Tag &tag : tags)
+		{
+			if (std::find(this->tags[tag].begin(), this->tags[tag].end(), entity) == this->tags[tag].end())
+				return false;
+		}
+
+		return true;
+	}
+
+	Entity EntityManager::getTaggedEntity(Entity::Tag tag)
+	{
+		if (tags[tag].size() > 0)
+			return Entity(tags[tag][0], this);
+		else
+			return Entity();
+	}
+
+	std::vector<Entity> EntityManager::getTaggedEntities(Entity::Tag tag)
+	{
+		std::vector<Entity> found;
+
+		for (Entity::Id &id : tags[tag])
+			found.emplace_back(id, this);
+
+		return found;
+	}
+
 	void EntityManager::setParent(Entity::Id entity, Entity::Id parent)
 	{
 		// Check for existing parent
@@ -179,6 +239,8 @@ namespace EntitySystem
 
 	void EntityManager::destroyEntity(Entity::Id id)
 	{
+		std::cout << "destroying entity: " << id.index() << std::endl;
+
 		assert(valid(id));
 
 		// Increment version to invalidate id
@@ -187,9 +249,37 @@ namespace EntitySystem
 		// Add index to free list
 		free.push_back(id.index());
 
+		// Remove parent
+		removeParent(id);
+
+		// Destroy children
+		destroyEntities(children[id]);
+
 		// Delete all components
 		for (auto &pair : components)
+		{
+			
+			if (pair.second[id.index()] != nullptr)
+				std::cout << "entity: " << pair.second[id.index()]->entity << std::endl;
+
 			pair.second[id.index()] = nullptr;
+		}
+
+		// Delete all tags
+		for (auto &tagList : tags)
+		{
+			std::cout << "before: " << tagList.second.size() << std::endl;
+			tagList.second.erase(std::remove(tagList.second.begin(), tagList.second.end(), id), tagList.second.end());
+			std::cout << "after: " << tagList.second.size() << std::endl;
+		}
+
+		std::cout << std::endl;
+	}
+
+	void EntityManager::destroyEntities(std::vector<Entity::Id> entities)
+	{
+		for (auto &entity : entities)
+			destroyEntity(entity);
 	}
 
 	Entity EntityManager::getEntity(Entity::Id id)

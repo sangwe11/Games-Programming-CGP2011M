@@ -16,6 +16,12 @@ namespace Engine
 		unsigned int frameTime = currentTime - lastTime;
 		lastTime = currentTime;
 		deltaTime = frameTime / 1000.0f;
+
+		if (first)
+		{
+			deltaTime = 0.1f;
+			first = false;
+		}
 	}
 
 	float Time::getDeltaTime()

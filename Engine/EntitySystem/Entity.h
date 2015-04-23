@@ -23,6 +23,9 @@ namespace EntitySystem
 	class Entity
 	{
 	public:
+		typedef std::string Tag;
+		typedef std::vector<Tag> Tags;
+
 		struct Id
 		{
 			Id() : id(0) { }
@@ -83,6 +86,10 @@ namespace EntitySystem
 
 		// Get entity id
 		Id getId() const { return id; }
+
+		// Tag
+		void tag(const Entity::Tag &tag);
+		bool tagged(const Entity::Tag &tag);
 
 		template <typename Component, typename ... Args>
 		typename Component::Handle addComponent(Args && ... args);
@@ -237,6 +244,15 @@ namespace EntitySystem
 		// Create a new entity from template class
 		Entity createEntityFromTemplate(EntityTemplate &entityTemplate);
 
+		void tagEntity(Entity::Id entity, const Entity::Tag &tag);
+		void tagEntity(Entity::Id entity, const Entity::Tags &tags);
+
+		const bool entityIsTagged(Entity::Id entity, const Entity::Tag &tag);
+		const bool entityIsTagged(Entity::Id entity, const Entity::Tags &tags);
+
+		Entity getTaggedEntity(Entity::Tag tag);
+		std::vector<Entity> getTaggedEntities(Entity::Tag tag);
+
 		void setParent(Entity::Id entity, Entity::Id parent);
 		void removeParent(Entity::Id entity);
 
@@ -250,6 +266,9 @@ namespace EntitySystem
 
 		// Destroy an entity
 		void destroyEntity(Entity::Id entity);
+
+		// Destroy a list of entities
+		void destroyEntities(std::vector<Entity::Id> entities);
 
 		// Get an entity by id
 		Entity getEntity(Entity::Id id);
@@ -354,14 +373,22 @@ namespace EntitySystem
 				// Check if there are any components of this type
 				if (pair.second.size() > 0)
 				{
-					// Is the component type derived from type Component?
-					if (Component *result = dynamic_cast<Component *>(pair.second[0].get()))
+					// Loop through components of type
+					for (unsigned int i = 0; i < pair.second.size(); ++i)
 					{
-						// Loop through component type and add to found if enabled (or if we don't care if the component is enabled)
-						for (unsigned int i = 0; i < pair.second.size(); ++i)
-							if (pair.second[i] != nullptr)
-								if ((enabledOnly && pair.second[i]->enabled) || !enabledOnly)
+						// Component exists?
+						if (pair.second[i] != nullptr)
+						{
+							// Enabled only?
+							if ((enabledOnly && pair.second[i]->enabled) || !enabledOnly)
+							{
+								// Check component casts to desired type
+								if (Component *result = dynamic_cast<Component *>(pair.second[i].get()))
+								{
 									found.emplace_back(pair.second[i]->entity.getId(), pair.second[i]->manager);
+								}
+							}
+						}
 					}
 				}
 			}
@@ -412,6 +439,9 @@ namespace EntitySystem
 
 		// List of entity children
 		std::unordered_map<Entity::Id, std::vector<Entity::Id>> children;
+
+		// List of entity tags
+		std::unordered_map<Entity::Tag, std::vector<Entity::Id>> tags;
 
 		// Reference to entity world
 		World &world;
