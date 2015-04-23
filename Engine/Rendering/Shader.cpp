@@ -8,7 +8,7 @@
 
 namespace Engine
 {
-	bool Shader::load()
+	bool Shader::load(const GLchar *varyings[], unsigned int varyingCount)
 	{
 		std::string linkError, validateError;
 
@@ -43,10 +43,10 @@ namespace Engine
 		}
 
 		// Set transform feedback varyings if given
-		//if (varyings != nullptr)
-		//{
-		//	glTransformFeedbackVaryings(program, varyingCount, varyings, GL_INTERLEAVED_ATTRIBS);
-		//}
+		if (varyings != nullptr)
+		{
+			glTransformFeedbackVaryings(program, varyingCount, varyings, GL_INTERLEAVED_ATTRIBS);
+		}
 
 		// Link program
 		glLinkProgram(program);

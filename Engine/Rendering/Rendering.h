@@ -26,6 +26,8 @@ namespace Engine
 	private:
 		// Geometry passes
 		void meshRender(Camera::Handle &camera);
+		void billboardRender(Camera::Handle &camera);
+		void particleRender(Camera::Handle &camera);
 		void skyboxRender(Camera::Handle &camera);
 
 		// Lighting passes

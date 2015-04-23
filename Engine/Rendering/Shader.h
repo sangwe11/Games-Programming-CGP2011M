@@ -13,7 +13,7 @@ namespace Engine
 	class Shader : public File<Shader>
 	{
 	public:
-		virtual bool load();
+		virtual bool load(const GLchar *varyings[] = nullptr, unsigned int varyingCount = 0);
 		virtual void cleanup();
 
 		const GLuint id() const;

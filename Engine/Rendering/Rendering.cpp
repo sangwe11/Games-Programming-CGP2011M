@@ -6,10 +6,12 @@
 #include "../EntitySystem/World.h"
 #include "Display.h"
 #include "Shader.h"
-#include "MeshRenderer.h"
 #include "Model.h"
 #include "../Core/Transform.h"
+#include "MeshRenderer.h"
+#include "BillboardRenderer.h"
 #include "Skybox.h"
+#include "ParticleEmitter.h"
 
 namespace Engine
 {
@@ -61,6 +63,7 @@ namespace Engine
 
 			// Render geometry
 			meshRender(camera);
+			billboardRender(camera);
 
 			// Render skybox
 			if (camera.getEntity().hasComponent<Skybox>())
@@ -71,6 +74,9 @@ namespace Engine
 			// Lighting
 			if (camera->getLighting())
 				lighting(camera);
+
+			// Render particles after skybox for transparency
+			particleRender(camera);
 
 			// Post processing
 			postProcessing(camera, postProcessingPasses);
@@ -121,6 +127,183 @@ namespace Engine
 		}
 	}
 
+	void Rendering::billboardRender(Camera::Handle &camera)
+	{
+		std::vector<BillboardRenderer::Handle> billboards = manager->getWorld().entities.getAllComponents<BillboardRenderer>(true);
+
+		// Enable blending
+		glEnable(GL_BLEND);
+		glBlendEquation(GL_FUNC_ADD);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		// Draw to diffuse texture
+		camera->getFramebuffer().bindDrawbuffers({ 0, 1, 2, 3 });
+
+		// Use shader
+		Shader &billboardShader = manager->getSystem<Files>()->loadFile<Shader>("shaders/Geometry/billboard");
+		billboardShader.use();
+
+		// Set camera uniforms
+		billboardShader.setUniform("billboard", 0);
+		billboardShader.setUniform("cameraPosition", camera.getEntity().getComponent<Transform>()->positionWorld());
+		billboardShader.setUniform("viewProjection", camera->getProjection() * camera->getView());
+
+		for (BillboardRenderer::Handle &billboard : billboards)
+		{
+			// Buffer data
+			glBindBuffer(GL_ARRAY_BUFFER, billboard->buffer);
+			glBufferSubData(GL_ARRAY_BUFFER, 0, billboard->positions.size() * sizeof(glm::vec3), &billboard->positions[0][0]);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+			// Load texture
+			Texture2D &texture = manager->getSystem<Files>()->loadFile<Texture2D>(billboard->texture, true, false, 0);
+			texture.use(0);
+
+			// Set uniforms
+			billboardShader.setUniform("scale", billboard->scale);
+
+			// Bind billboard position buffer
+			glBindVertexArray(billboard->vaObject);
+
+			// Draw
+			glDrawArrays(GL_POINTS, 0, billboard->positions.size());
+
+			// Unbind
+			glBindVertexArray(0);
+		}
+	}
+
+	void Rendering::particleRender(Camera::Handle &camera)
+	{
+		// Get all meshrenderer components
+		std::vector<ParticleEmitter::Handle> emitters = manager->getWorld().entities.getAllComponents<ParticleEmitter>(true);
+
+		// Get shaders
+		const GLchar* varyings[4] = { "TypeOut", "PositionOut", "VelocityOut", "AgeOut" };
+		Shader &particleUpdate = manager->getSystem<Files>()->loadFile<Shader>("shaders/Geometry/particle_update", varyings, 4);
+		Shader &particleRender = manager->getSystem<Files>()->loadFile<Shader>("shaders/Geometry/particle_render");
+
+		// Disable depth writing so all particles are rendered
+		glDepthMask(GL_FALSE);
+
+		// If not using lighting, draw particles to diffuse texture instead
+		if (!camera->getLighting())
+		{
+			camera->getFramebuffer().bindDrawbuffers({ 1 });
+		}
+		else
+		{
+			camera->getFramebuffer().bindDrawbuffers({ 4 });
+		}
+
+		// Get uniform buffers
+		UniformBuffer &transformBuffer = getUniformBuffer("transformUniforms");
+		UniformBuffer &particleTypeBuffer = getUniformBuffer("particleStageUniforms");
+
+		for (ParticleEmitter::Handle particleEmitter : emitters)
+		{
+			// Current time
+			unsigned int currentTime = SDL_GetTicks();
+
+			// Get transform component from entity
+			Transform::Handle transform = particleEmitter->entity.getComponent<Transform>();
+
+			// Update transform uniform buffer
+			glBindBuffer(GL_UNIFORM_BUFFER, transformBuffer.getBuffer());
+			glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), &transform->getModelMatrix()[0][0]);
+			glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+			// Use particle update shader
+			particleUpdate.use();
+
+			// Set uniforms
+			particleUpdate.setUniform("currentTime", (float)currentTime);
+			particleUpdate.setUniform("deltaTime", (float)(currentTime - particleEmitter->lastTime));
+			particleUpdate.setUniform("noParticleStages", particleEmitter->particleStages.size());
+			particleUpdate.setUniform("enabled", particleEmitter->enabled);
+
+			// Buffer uniforms for each particle stage
+			for (unsigned int i = 0; i < particleEmitter->particleStages.size(); ++i)
+			{
+				//std::cout << "Particle stage: " << i << " \t texture: " << particleEmitter->particleStages[i].texture << std::endl;
+				glBindBuffer(GL_UNIFORM_BUFFER, particleTypeBuffer.getBuffer());
+				glBufferSubData(GL_UNIFORM_BUFFER, sizeof(ParticleStage)* i, sizeof(ParticleStage), &particleEmitter->particleStages[i]);
+				glBindBuffer(GL_UNIFORM_BUFFER, 0);
+			}
+
+			// Update last time
+			particleEmitter->lastTime = currentTime;
+
+			// Disable rasterization
+			glEnable(GL_RASTERIZER_DISCARD);
+
+			// Bind current buffer vertex array
+			glBindVertexArray(particleEmitter->vaObject[particleEmitter->currentBuffer]);
+
+			// Bind current buffer and transform feedback
+			glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, particleEmitter->transformFeedback[particleEmitter->currentFeedback]);
+
+			// Make transform feedback active
+			glBeginTransformFeedback(GL_POINTS);
+
+			// If first pass, draw using glDrawArrays()
+			if (particleEmitter->firstDraw)
+			{
+				glDrawArrays(GL_POINTS, 0, 1);
+				particleEmitter->firstDraw = false;
+			}
+			else
+			{
+				glDrawTransformFeedback(GL_POINTS, particleEmitter->transformFeedback[particleEmitter->currentBuffer]);
+			}
+
+			// End transform feedback
+			glEndTransformFeedback();
+
+			// Enable rasterization
+			glDisable(GL_RASTERIZER_DISCARD);
+
+			// Use billboarding shader
+			particleRender.use();
+
+			// Enable blending
+			glEnable(GL_BLEND);
+			glBlendEquation(GL_FUNC_ADD);
+			//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+			//glBlendFunc(GL_ONE, GL_ONE);
+
+			// Use textures
+			for (unsigned int i = 0; i < particleEmitter->textures.size() - 1; ++i)
+			{
+				glActiveTexture(GL_TEXTURE0 + i);
+				glBindTexture(GL_TEXTURE_2D, particleEmitter->textures[particleEmitter->particleStages[i + 1].texture].get());
+				particleRender.setUniform("particleTexture" + std::to_string(i), i);
+			}
+
+			// Set uniforms
+			particleRender.setUniform("cameraPosition", camera->entity.getComponent<Transform>()->positionWorld());
+			particleRender.setUniform("viewProjection", camera->getProjection() * camera->getView());
+
+			// Bind current feedback vertex array
+			glBindVertexArray(particleEmitter->vaObject[particleEmitter->currentFeedback]);
+
+			// Draw using transform feedback
+			glDrawTransformFeedback(GL_POINTS, particleEmitter->transformFeedback[particleEmitter->currentFeedback]);
+
+			// Swap buffer and transform
+			unsigned int t = particleEmitter->currentBuffer;
+			particleEmitter->currentBuffer = particleEmitter->currentFeedback;
+			particleEmitter->currentFeedback = t;
+		}
+
+		// Renable depth writing
+		glDepthMask(GL_TRUE);
+
+		// Disable blending
+		glDisable(GL_BLEND);
+	}
+
 	void Rendering::skyboxRender(Camera::Handle &camera)
 	{
 		// Get skybox component attached to camera
@@ -152,7 +335,7 @@ namespace Engine
 		Transform::Handle transform = skybox->entity.getComponent<Transform>();
 
 		// Create model matrix from position
-		glm::mat4 t = glm::translate(transform->position);
+		glm::mat4 t = glm::translate(transform->positionWorld());
 
 		// Buffer uniform data
 		glBindBuffer(GL_UNIFORM_BUFFER, transformBuffer.getBuffer());
@@ -224,7 +407,9 @@ namespace Engine
 		{
 			// Create model matrix to scale sphere
 			Transform::Handle transform = light.getEntity().getComponent<Transform>();
-			glm::mat4 lightMatrix = glm::translate(transform->position) * glm::mat4_cast(transform->getRotation()) * glm::scale(glm::vec3(light->radius));
+			glm::mat4 parentMatrix = transform->getParentModelMatrix();
+			glm::mat4 modelMatrix = transform->getModelMatrix();
+			glm::mat4 lightMatrix = transform->getModelMatrix() * glm::scale(glm::vec3(light->radius));
 
 			// Buffer uniform data
 			glBindBuffer(GL_UNIFORM_BUFFER, transformBuffer.getBuffer());
@@ -263,7 +448,7 @@ namespace Engine
 		{
 			// Create model matrix to scale sphere
 			Transform::Handle transform = light.getEntity().getComponent<Transform>();
-			glm::mat4 lightMatrix = glm::translate(transform->position) * glm::mat4_cast(transform->getRotation()) * glm::scale(glm::vec3(light->range));
+			glm::mat4 lightMatrix = transform->getModelMatrix() * glm::scale(glm::vec3(light->range));
 
 			// Buffer uniform data
 			glBindBuffer(GL_UNIFORM_BUFFER, transformBuffer.getBuffer());
@@ -350,7 +535,7 @@ namespace Engine
 		shader.setUniform("diffuseOpacityIn", 1);
 		shader.setUniform("normalIn", 2);
 		shader.setUniform("screenSize", manager->getSystem<Display>()->getSize());
-		shader.setUniform("light.position", light.getEntity().getComponent<Transform>()->position);
+		shader.setUniform("light.position", light.getEntity().getComponent<Transform>()->positionWorld());
 		shader.setUniform("light.color", light->color);
 		shader.setUniform("light.intensity", light->intensity);
 		shader.setUniform("light.ambient", light->ambient);
@@ -372,7 +557,7 @@ namespace Engine
 		shader.setUniform("diffuseOpacityIn", 1);
 		shader.setUniform("normalIn", 2);
 		shader.setUniform("screenSize", manager->getSystem<Display>()->getSize());
-		shader.setUniform("light.position", light.getEntity().getComponent<Transform>()->position);
+		shader.setUniform("light.position", light.getEntity().getComponent<Transform>()->positionWorld());
 		shader.setUniform("light.color", light->color);
 		shader.setUniform("light.intensity", light->intensity);
 		shader.setUniform("light.ambient", light->ambient);
@@ -390,6 +575,7 @@ namespace Engine
 	{
 		// Disable depth testing
 		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_STENCIL_TEST);
 
 		// Enable alpha
 		glEnable(GL_BLEND);
@@ -406,6 +592,7 @@ namespace Engine
 
 				// Set uniforms
 				shader.setUniform("sceneTexture", 0);
+				shader.setUniform("depthTexture", 1);
 				effect.second->setUniforms();
 
 				// Bind framebuffer for post processing pass
@@ -413,9 +600,9 @@ namespace Engine
 				{
 					// Read from final texture if using lighting, otherwise read from diffuse
 					if (camera->getLighting())
-						camera->getFramebuffer().bindTextures({ 4 });
+						camera->getFramebuffer().bindTextures({ 4 }, effect.second->bindDepth());
 					else
-						camera->getFramebuffer().bindTextures({ 1 });
+						camera->getFramebuffer().bindTextures({ 1 }, effect.second->bindDepth());
 
 					// Draw to first post processing texture
 					camera->getFramebuffer().bindDrawbuffers({ 5 });
@@ -423,7 +610,7 @@ namespace Engine
 				else if (passes % 2 == 0)
 				{
 					// Even pass read from second post processing texture
-					camera->getFramebuffer().bindTextures({ 6 });
+					camera->getFramebuffer().bindTextures({ 6 }, effect.second->bindDepth());
 
 					// And draw to first
 					camera->getFramebuffer().bindDrawbuffers({ 5 });
@@ -431,7 +618,7 @@ namespace Engine
 				else
 				{
 					// Odd pass read from first post processing texture
-					camera->getFramebuffer().bindTextures({ 5 });
+					camera->getFramebuffer().bindTextures({ 5 }, effect.second->bindDepth());
 
 					// And draw to second
 					camera->getFramebuffer().bindDrawbuffers({ 6 });
