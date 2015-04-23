@@ -10,6 +10,7 @@
 namespace Engine
 {
 	class AudioSource;
+	class AudioSource2D;
 
 	class Audio : public EntitySystem::System<Audio>
 	{
@@ -22,6 +23,7 @@ namespace Engine
 
 		irrklang::ISoundSource *loadSound(const std::string &file);
 		irrklang::ISound *playSound(AudioSource &source);
+		irrklang::ISound *playSound2D(AudioSource2D &source);
 
 		irrklang::ISoundEngine *getAudio();
 

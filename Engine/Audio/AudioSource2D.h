@@ -1,5 +1,5 @@
-#ifndef _AUDIOSOURCE_H
-#define _AUDIOSOURCE_H
+#ifndef _AudioSource2D_H
+#define _AudioSource2D_H
 
 #include <irrKlang-1.5.0/irrKlang.h>
 #include <string>
@@ -10,11 +10,11 @@
 
 namespace Engine
 {
-	class AudioSource : public EntitySystem::Component<AudioSource>, public irrklang::ISoundStopEventReceiver
+	class AudioSource2D : public EntitySystem::Component<AudioSource2D>, public irrklang::ISoundStopEventReceiver
 	{
 		friend class Audio;
 	public:
-		AudioSource(const std::string &file, unsigned int volume = 100, bool loop = false, bool playOnAwake = false);
+		AudioSource2D(const std::string &file, unsigned int volume = 100, bool loop = false, bool playOnAwake = false);
 
 		// Required components / component setup
 		virtual void initialise();
@@ -36,9 +36,6 @@ namespace Engine
 
 		// Audio system
 		Audio::Handle audio;
-
-		// Component handles
-		Transform::Handle transform;
 
 		// Sound clip to play
 		irrklang::ISoundSource *clip;

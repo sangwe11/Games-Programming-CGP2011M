@@ -1,4 +1,4 @@
-#include "AudioSource.h"
+#include "AudioSource2D.h"
 #include "Audio.h"
 #include "../EntitySystem/World.h"
 
@@ -6,7 +6,7 @@
 
 namespace Engine
 {
-	AudioSource::AudioSource(const std::string &file, unsigned int volume, bool loop, bool playOnAwake)
+	AudioSource2D::AudioSource2D(const std::string &file, unsigned int volume, bool loop, bool playOnAwake)
 	{
 		this->file = file;
 		this->playOnAwake = playOnAwake;
@@ -19,11 +19,8 @@ namespace Engine
 		this->volume = glm::clamp(volume, (unsigned int)0, (unsigned int)100);
 	}
 
-	void AudioSource::initialise()
+	void AudioSource2D::initialise()
 	{
-		// Require transform component
-		transform = entity.getComponent<Transform>();
-
 		// Grab the audio system
 		audio = manager->getWorld().systems.getSystem<Audio>();
 
@@ -44,7 +41,7 @@ namespace Engine
 			play();
 	}
 
-	void AudioSource::uninitialise()
+	void AudioSource2D::uninitialise()
 	{
 		// Stop playing
 		stop();
@@ -54,7 +51,7 @@ namespace Engine
 		clip = nullptr;
 	}
 
-	void AudioSource::play(unsigned int delay)
+	void AudioSource2D::play(unsigned int delay)
 	{
 		if (playing && paused)
 		{
@@ -67,7 +64,7 @@ namespace Engine
 			if (clip != nullptr)
 			{
 				playing = true;
-				sound = audio->playSound(*this);
+				sound = audio->playSound2D(*this);
 
 				if (sound != nullptr)
 					sound->grab();
@@ -79,7 +76,7 @@ namespace Engine
 		}
 	}
 
-	void AudioSource::pause()
+	void AudioSource2D::pause()
 	{
 		if (playing && !paused)
 		{
@@ -88,7 +85,7 @@ namespace Engine
 		}
 	}
 
-	void AudioSource::unpause()
+	void AudioSource2D::unpause()
 	{
 		if (playing && paused)
 		{
@@ -97,7 +94,7 @@ namespace Engine
 		}
 	}
 
-	void AudioSource::stop()
+	void AudioSource2D::stop()
 	{
 		if (playing)
 		{
@@ -105,7 +102,7 @@ namespace Engine
 		}
 	}
 
-	void AudioSource::OnSoundStopped(irrklang::ISound *sound, irrklang::E_STOP_EVENT_CAUSE reason, void *userData)
+	void AudioSource2D::OnSoundStopped(irrklang::ISound *sound, irrklang::E_STOP_EVENT_CAUSE reason, void *userData)
 	{
 		// No longer playing
 		this->paused = false;

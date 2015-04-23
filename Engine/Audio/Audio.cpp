@@ -2,6 +2,9 @@
 #include "AudioListener.h"
 #include "../EntitySystem/World.h"
 #include "AudioSource.h"
+#include "AudioSource2D.h"
+
+#include <SDL/SDL.h>
 
 #include <iostream>
 
@@ -74,10 +77,29 @@ namespace Engine
 		else
 		{
 			// Set variables
+			//sound->setSoundStopEventReceiver(&source, nullptr);
+			sound->setVolume(source.volume / 100.0f);
+
+			// Unpause
+			sound->setIsPaused(false);
+		}
+
+		return sound;
+	}
+
+	irrklang::ISound *Audio::playSound2D(AudioSource2D &source)
+	{
+		irrklang::ISound *sound = audio->play2D(source.clip, source.loop, false, true);
+
+		if (sound == nullptr)
+		{
+			std::cout << "Couldn't play sound clip: " << source.file << std::endl;
+		}
+		else
+		{
+			// Set variables
 			sound->setSoundStopEventReceiver(&source, nullptr);
 			sound->setVolume(source.volume / 100.0f);
-			//sound->setMinDistance(source->minDistance);
-			//sound->setMaxDistance(source->maxDistance);
 
 			// Unpause
 			sound->setIsPaused(false);
@@ -132,7 +154,7 @@ namespace Engine
 
 		// Update position of audio listener
 		irrklang::vec3df listenerPosition(listeners[0]->transform->position.x, listeners[0]->transform->position.y, listeners[0]->transform->position.z);
-		irrklang::vec3df listenerForward(listeners[0]->transform->forward().x, listeners[0]->transform->forward().y, listeners[0]->transform->forward().z);
+		irrklang::vec3df listenerForward(-listeners[0]->transform->forward().x, -listeners[0]->transform->forward().y, -listeners[0]->transform->forward().z);
 		audio->setListenerPosition(listenerPosition, listenerForward);
 	}
 
