@@ -21,12 +21,14 @@ namespace Engine
 		void enable();
 		void disable();
 		bool isEnabled();
+		bool bindDepth();
 
 	protected:
 		std::string shaderName;
 		Shader shader;
 		Files::Handle files;
 		bool enabled;
+		bool depthTexture;
 
 	private:
 		void loadShader();

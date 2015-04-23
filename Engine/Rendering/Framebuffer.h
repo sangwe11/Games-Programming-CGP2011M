@@ -18,7 +18,7 @@ namespace Engine
 		void bind(const bool &read = true, const bool &draw = true);
 		void unbind(const bool &read = true, const bool &draw = true);
 
-		void bindTextures(const std::vector<unsigned int> &textures);
+		void bindTextures(const std::vector<unsigned int> &textures, const bool &depthT = false);
 		void bindDrawbuffers(const std::vector<unsigned int> &textures);
 		void bindReadbuffer(const unsigned int &textures);
 

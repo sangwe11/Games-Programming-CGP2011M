@@ -42,7 +42,7 @@ namespace Engine
 
 			// Depth texture
 			glBindTexture(GL_TEXTURE_2D, depth);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, 0);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depth, 0);
 
 			// Unbind
@@ -94,12 +94,21 @@ namespace Engine
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	}
 
-	void Framebuffer::bindTextures(const std::vector<unsigned int> &textures)
+	void Framebuffer::bindTextures(const std::vector<unsigned int> &textures, const bool &depthT)
 	{
 		for (unsigned int i = 0; i < textures.size(); ++i)
 		{
 			glActiveTexture(GL_TEXTURE0 + i);
 			glBindTexture(GL_TEXTURE_2D, this->textures[textures[i]]);
+		}
+
+		if (depthT)
+		{
+			glActiveTexture(GL_TEXTURE0 + textures.size());
+			glBindTexture(GL_TEXTURE_2D, depth);
+			glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_STENCIL_TEXTURE_MODE, GL_DEPTH_COMPONENT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+			glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
 		}
 	}
 

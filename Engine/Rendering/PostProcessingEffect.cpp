@@ -32,6 +32,11 @@ namespace Engine
 		return enabled;
 	}
 
+	bool BasePostProcessingEffect::bindDepth()
+	{
+		return depthTexture;
+	}
+
 	void BasePostProcessingEffect::loadShader()
 	{
 		shader = files->loadFile<Shader>(shaderName);

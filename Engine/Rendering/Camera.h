@@ -10,6 +10,8 @@ namespace Engine
 {
 	class Camera : public EntitySystem::Component<Camera>
 	{
+		friend class Rendering;
+
 	public:
 		Camera(const float &fov, const float &zNear, const float &zFar, const bool &lighting, const bool &blend, const glm::vec2 &position, const glm::vec2 &size, const glm::vec4 &clearColor);
 
