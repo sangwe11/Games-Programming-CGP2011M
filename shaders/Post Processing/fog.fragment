@@ -1,0 +1,18 @@
+#version 330 core
+
+in vec2 uvIn;
+in vec3 positionIn;
+in vec3 fragmentIn;
+
+uniform sampler2D sceneTexture; // final camera framebuffer
+uniform sampler2D depthTexture; // depth buffer texture
+
+uniform vec2 screensize;
+
+void main()
+{
+	vec4 depth = texture(depthTexture, gl_FragCoord.xy/screensize);
+	vec4 sceneColor = texture(sceneTexture, gl_FragCoord.xy/screensize);
+	
+	gl_FragColor = depth;
+}
