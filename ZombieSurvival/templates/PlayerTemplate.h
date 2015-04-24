@@ -38,7 +38,7 @@ public:
 		EntitySystem::Entity camera = entity.addChild();
 		camera.addComponent<Engine::Transform>(glm::vec3(0.0f, 2.4f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f));
 		camera.addComponent<Engine::Camera>(60.0f, 0.3f, 1000.0f, true, false, glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-		camera.getComponent<Engine::Camera>()->addPostProcessingEffect<FXAA>().disable();
+		camera.getComponent<Engine::Camera>()->addPostProcessingEffect<FXAA>().enable();
 		camera.addComponent<Engine::Skybox>("textures/Skyboxes/ame_starfield", "starfield_rt.tga", "starfield_lf.tga", "starfield_up.tga", "starfield_dn.tga", "starfield_bk.tga", "starfield_ft.tga");
 		camera.addComponent<PlayerCameraControl>(2.0f);
 		camera.addComponent<PlayerAccessories>(200.0f, 1.0f, 4.0f);
