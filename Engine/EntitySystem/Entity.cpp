@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <algorithm>
+#include <iostream>
 
 namespace EntitySystem
 {

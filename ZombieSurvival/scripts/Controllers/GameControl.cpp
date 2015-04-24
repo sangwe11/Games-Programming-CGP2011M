@@ -3,6 +3,7 @@
 #include <Core/Controller.h>
 #include <Core/KeyboardMouse.h>
 #include "../Enemy/EnemyHealth.h"
+#include "../Enemy/EnemyMovement.h"
 
 void GameControl::onAwake()
 {
@@ -93,6 +94,13 @@ void GameControl::update()
 		// Disable the player
 		movement->disable();
 		camera->disable();
+
+		// Disable zombies
+		for (EnemyMovement::Handle &movement : entity.getManager().getAllComponents<EnemyMovement>(false))
+		{
+			movement->disable();
+		}
+
 
 		// Game over
 		gameOver = true;

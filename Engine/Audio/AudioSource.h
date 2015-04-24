@@ -25,6 +25,8 @@ namespace Engine
 		void unpause();
 		void stop();
 
+		const bool &isPlaying() { return playing; }
+
 		virtual void OnSoundStopped(irrklang::ISound *sound, irrklang::E_STOP_EVENT_CAUSE reason, void *userData);
 
 	private:

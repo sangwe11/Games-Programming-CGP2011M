@@ -13,7 +13,7 @@ public:
 	virtual void update();
 
 	void addDamage(const float &amount);
-	const bool alive() { return isAlive && (deathTimer <= 0.0f); }
+	const bool alive() { return isAlive; }
 	const float health() { return currentHealth; }
 
 private:
@@ -29,7 +29,6 @@ private:
 	// State
 	float currentHealth;
 	bool isAlive;
-	float deathTimer;
 };
 
 #endif

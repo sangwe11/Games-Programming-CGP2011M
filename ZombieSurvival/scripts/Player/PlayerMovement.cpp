@@ -22,6 +22,15 @@ void PlayerMovement::onAwake()
 	input = entity.getManager().getWorld().systems.getSystem<Engine::Input>();
 	time = entity.getManager().getWorld().systems.getSystem<Engine::Time>();
 
+	// Add sounds
+	EntitySystem::Entity walkS = entity.addChild();
+	walkS.addComponent<Engine::Transform>(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f));
+	stepSound = walkS.addComponent<Engine::AudioSource>("sounds/footsteps.mp3", 50, true, false);
+
+	EntitySystem::Entity attackS = entity.addChild();
+	attackS.addComponent<Engine::Transform>(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f));
+	attackSound = attackS.addComponent<Engine::AudioSource>("sounds/axe_hit.mp3", 50, false, false);
+
 	// Capture mouse
 	mouseCaptured = true;
 	SDL_SetRelativeMouseMode((SDL_bool)mouseCaptured);
@@ -99,12 +108,14 @@ void PlayerMovement::update()
 			transform->position += direction * runSpeed * time->getDeltaTime();
 		else
 			transform->position += direction * walkSpeed * time->getDeltaTime();
-	}
 
-	// Jumping
-	if (jump)
+		// Play step sound
+		stepSound->play();
+	}
+	else
 	{
-		
+		// Stop step sound
+		stepSound->stop();
 	}
 
 	// Click to attack
@@ -136,6 +147,13 @@ void PlayerMovement::update()
 			// Attack
 			attackTimer = 0.6f;
 			zombies[closest].getComponent<EnemyHealth>()->addDamage(5.0f);
+
+			// Stop sound if already playing
+			if (attackSound->isPlaying())
+				attackSound->stop();
+
+			// Play sound
+			attackSound->play();
 		}
 	}
 

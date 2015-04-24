@@ -105,6 +105,8 @@ namespace Engine
 		if (playing)
 		{
 			sound->stop();
+			playing = false;
+			paused = false;
 		}
 	}
 

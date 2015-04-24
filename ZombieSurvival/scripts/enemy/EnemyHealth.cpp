@@ -15,6 +15,9 @@ void EnemyHealth::onAwake()
 
 	// Get game control
 	gameControl = entity.getManager().getTaggedEntity("gamecontrol").getComponent<GameControl>();
+
+	// Set alive
+	isAlive = true;
 }
 
 void EnemyHealth::update()
@@ -23,19 +26,12 @@ void EnemyHealth::update()
 	if (currentHealth <= 0.0f && isAlive)
 	{
 		isAlive = false;
-		deathTimer = 2.0f;
 
 		// Play sound
 
 		// Disable components
-		//entity.getComponentInChildren<Engine::MeshRenderer>()->disable();
+		entity.getComponentInChildren<Engine::MeshRenderer>()->disable();
 		entity.getComponent<EnemyMovement>()->disable();
-	}
-
-	// Delay entity destroy
-	if (!isAlive && deathTimer > 0.0f)
-	{
-		deathTimer -= time->getDeltaTime();
 	}
 }
 

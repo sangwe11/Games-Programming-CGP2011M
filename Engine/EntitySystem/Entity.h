@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <assert.h>
 #include <memory>
+#include <string>
 
 #include "TypeId.h"
 

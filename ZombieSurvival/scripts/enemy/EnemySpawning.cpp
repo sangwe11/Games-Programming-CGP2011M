@@ -37,7 +37,7 @@ void EnemySpawning::update()
 	else
 		currentRoundUI->setFontColor(glm::vec4(1.0f));
 
-	std::cout << entity.getManager().getTaggedEntities("zombie").size() << std::endl;
+	//std::cout << entity.getManager().getTaggedEntities("zombie").size() << std::endl;
 
 	// Spawn zombies if currently alive is not at the maximum
 	if ((entity.getManager().getTaggedEntities("zombie").size() < max) && (left > 0))
