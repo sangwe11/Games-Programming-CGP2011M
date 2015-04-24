@@ -1,0 +1,16 @@
+#version 330 core
+
+in vec3 vertex;
+in vec2 uv;
+
+out vec2 uvIn;
+out vec3 positionIn;
+out vec3 fragmentIn;
+
+void main()
+{
+	uvIn = uv;
+	positionIn = vertex;
+	//fragmentIn = gl_Normal;
+	gl_Position = vec4(vertex, 1.0);
+}

@@ -1,0 +1,16 @@
+#version 330 core
+
+in vec2 uvIn;
+
+uniform sampler2D camera; // final camera framebuffer
+
+vec4 getTexture(sampler2D tex, vec2 uv)
+{
+	return texture(tex, uv);
+}
+
+void main()
+{
+	// Pass through texture color
+	gl_FragColor = getTexture(camera, uvIn);
+}

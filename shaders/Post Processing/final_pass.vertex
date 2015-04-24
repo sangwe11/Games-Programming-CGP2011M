@@ -1,0 +1,14 @@
+#version 330 core
+
+in vec3 vertex;
+in vec2 uv;
+
+out vec2 uvIn;
+
+uniform mat4 framebufferMatrix;
+
+void main()
+{
+	uvIn = uv;
+	gl_Position = framebufferMatrix * vec4(vertex, 1.0);
+}
