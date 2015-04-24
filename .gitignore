@@ -55,3 +55,6 @@ Makefile
 
 # Exception for included libs
 !libraries/**/*.lib
+
+# Exception for included windows dlls
+!windows/dlls/
