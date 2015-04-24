@@ -122,7 +122,10 @@ namespace Engine
 				}
 
 				// Sound position
-				irrklang::vec3df position(source->transform->position.x, source->transform->position.y, source->transform->position.z);
+				glm::vec3 worldPosition = source->transform->positionWorld();
+
+				// Convert to irrklangs vector type
+				irrklang::vec3df position(worldPosition.x, worldPosition.y, worldPosition.z);
 
 				// Set position
 				source->sound->setPosition(position);

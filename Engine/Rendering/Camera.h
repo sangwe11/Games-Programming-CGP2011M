@@ -36,8 +36,10 @@ namespace Engine
 		template <typename T, typename... Args>
 		typename T &addPostProcessingEffect(Args ... args)
 		{
+			EntitySystem::TypeId type = T::getTypeId();
+
 			// Check if effect of type already exists
-			if (postProcessingEffects[T::getTypeId()] != nullptr)
+			if (postProcessingEffects.find(T::getTypeId()) != postProcessingEffects.end())
 			{
 				// Return the existing effect
 				std::cout << "Post Processing effect of this type has already been added." << std::endl;

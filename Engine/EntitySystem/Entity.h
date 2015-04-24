@@ -97,6 +97,8 @@ namespace EntitySystem
 		template <typename Component>
 		void removeComponent();
 
+		void removeAllComponents();
+
 		template <typename Component>
 		typename Component::Handle getComponent();
 
@@ -337,6 +339,8 @@ namespace EntitySystem
 			assert(valid(id) && entityHasComponent<Component>(id));
 			components[Type<BaseComponent>::getTypeId<Component>()][id.index()] = nullptr;
 		}
+
+		void removeAllComponentsFromEntity(Entity::Id id);
 
 		template <typename Component>
 		std::vector<typename Component::Handle> getAllComponents(const bool &enabledOnly)

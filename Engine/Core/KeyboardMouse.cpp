@@ -20,12 +20,11 @@ namespace Engine
 		bindKeyboardButton(SDL_SCANCODE_ESCAPE, "quit");
 
 		bindKeyboardButton(SDL_SCANCODE_1, "special1");
-		bindKeyboardButton(SDL_SCANCODE_1, "special2");
+		bindKeyboardButton(SDL_SCANCODE_2, "special2");
 
 		bindKeyboardButton(SDL_SCANCODE_LSHIFT, "sprint");
-		bindKeyboardButton(SDL_SCANCODE_RSHIFT, "sprint");
 		bindKeyboardButton(SDL_SCANCODE_LCTRL, "crouch");
-		bindKeyboardButton(SDL_SCANCODE_RCTRL, "crouch");
+		bindKeyboardButton(SDL_SCANCODE_M, "mouseCapture");
 
 		bindMouseButton(SDL_BUTTON_LEFT, "fire");
 		bindMouseButton(SDL_BUTTON_RIGHT, "aim");
@@ -44,7 +43,7 @@ namespace Engine
 		// Update button states
 		for (std::pair<SDL_Scancode, std::vector<Button>> binding : buttonBindings)
 			for (const Button &button : binding.second)
-				buttons[button] = keystate[binding.first] != 0;
+					buttons[button] = keystate[binding.first] != 0;
 
 		// Update axes
 		for (std::pair<std::pair<SDL_Scancode, SDL_Scancode>, std::vector<Axis>> binding : axisBindings)
@@ -66,40 +65,44 @@ namespace Engine
 	{
 		switch (e.type)
 		{
-		case SDL_MOUSEBUTTONDOWN:
-		{
-									// Set any buttons binded to controller button
-									for (Button button : mouseButtonBindings[e.button.button])
-										buttons[button] = true;
-		}
+			case SDL_MOUSEBUTTONDOWN:
+			{
+				// Set any buttons binded to controller button
+				for (Button button : mouseButtonBindings[e.button.button])
+				{
+					buttons[button] = true;
+				}
+			}
 			break;
 
-		case SDL_MOUSEBUTTONUP:
-		{
-								  // Set any buttons binded to controller button
-								  for (Button button : mouseButtonBindings[e.button.button])
-									  buttons[button] = false;
-		}
+			case SDL_MOUSEBUTTONUP:
+			{
+				// Set any buttons binded to controller button
+				for (Button button : mouseButtonBindings[e.button.button])
+				{
+					buttons[button] = false;
+				}
+			}
 			break;
 
-		case SDL_MOUSEMOTION:
-		{
-								float xvalue = e.motion.xrel * 0.05f;
-								float yvalue = e.motion.yrel * 0.05f;
+			case SDL_MOUSEMOTION:
+			{
+				float xvalue = e.motion.xrel * 0.05f;
+				float yvalue = e.motion.yrel * 0.05f;
 
-								for (std::pair<Axis, Axis> pair : mouseAxisBindings)
-								{
-									if (e.motion.xrel > 1 || e.motion.xrel < -1)
-										axes[pair.first] = xvalue;
-									else
-										axes[pair.first] = 0.0f;
+				for (std::pair<Axis, Axis> pair : mouseAxisBindings)
+				{
+					if (e.motion.xrel > 1 || e.motion.xrel < -1)
+						axes[pair.first] = xvalue;
+					else
+						axes[pair.first] = 0.0f;
 
-									if (e.motion.yrel > 1 || e.motion.yrel < -1)
-										axes[pair.second] = yvalue;
-									else
-										axes[pair.second] = 0.0f;
-								}
-		}
+					if (e.motion.yrel > 1 || e.motion.yrel < -1)
+						axes[pair.second] = yvalue;
+					else
+						axes[pair.second] = 0.0f;
+				}
+			}
 			break;
 		}
 	}

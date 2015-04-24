@@ -27,8 +27,8 @@ namespace Engine
 		std::string shaderName;
 		Shader shader;
 		Files::Handle files;
-		bool enabled;
-		bool depthTexture;
+		bool enabled = false;
+		bool depthTexture = false;
 
 	private:
 		void loadShader();
@@ -45,7 +45,7 @@ namespace Engine
 
 		static EntitySystem::TypeId getTypeId()
 		{
-			return EntitySystem::Type<PostProcessingEffect>::getTypeId<T>();
+			return EntitySystem::Type<BasePostProcessingEffect>::getTypeId<T>();
 		}
 	};
 }

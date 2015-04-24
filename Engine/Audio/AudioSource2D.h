@@ -38,10 +38,10 @@ namespace Engine
 		Audio::Handle audio;
 
 		// Sound clip to play
-		irrklang::ISoundSource *clip;
+		irrklang::ISoundSource *clip = nullptr;
 
 		// State
-		irrklang::ISound *sound;
+		irrklang::ISound *sound = nullptr;
 		bool playing;
 		bool paused;
 

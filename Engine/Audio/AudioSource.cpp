@@ -49,8 +49,11 @@ namespace Engine
 		// Stop playing
 		stop();
 
-		// Drop sound clip
-		clip->drop();
+		// Remove sound stop event
+		if (sound != nullptr)
+			sound->setSoundStopEventReceiver(nullptr, nullptr);
+
+		// Clear clip
 		clip = nullptr;
 	}
 

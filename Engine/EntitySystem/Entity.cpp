@@ -28,6 +28,11 @@ namespace EntitySystem
 		return manager->entityIsTagged(id, tag);
 	}
 
+	void Entity::removeAllComponents()
+	{
+		manager->removeAllComponentsFromEntity(id);
+	}
+
 	void Entity::destroy()
 	{
 		assert(valid());
@@ -239,8 +244,6 @@ namespace EntitySystem
 
 	void EntityManager::destroyEntity(Entity::Id id)
 	{
-		std::cout << "destroying entity: " << id.index() << std::endl;
-
 		assert(valid(id));
 
 		// Increment version to invalidate id
@@ -255,25 +258,16 @@ namespace EntitySystem
 		// Destroy children
 		destroyEntities(children[id]);
 
-		// Delete all components
-		for (auto &pair : components)
-		{
-			
-			if (pair.second[id.index()] != nullptr)
-				std::cout << "entity: " << pair.second[id.index()]->entity << std::endl;
+		// Erase entity from parent / child
+		parents.erase(id);
+		children.erase(id);
 
-			pair.second[id.index()] = nullptr;
-		}
+		// Remove all components from entity
+		removeAllComponentsFromEntity(id);
 
 		// Delete all tags
 		for (auto &tagList : tags)
-		{
-			std::cout << "before: " << tagList.second.size() << std::endl;
 			tagList.second.erase(std::remove(tagList.second.begin(), tagList.second.end(), id), tagList.second.end());
-			std::cout << "after: " << tagList.second.size() << std::endl;
-		}
-
-		std::cout << std::endl;
 	}
 
 	void EntityManager::destroyEntities(std::vector<Entity::Id> entities)
@@ -286,6 +280,22 @@ namespace EntitySystem
 	{
 		assert(valid(id));
 		return Entity(id, this);
+	}
+
+	void EntityManager::removeAllComponentsFromEntity(Entity::Id id)
+	{
+		// Uninit all components and remove
+		for (auto &pair : components)
+		{
+			if (pair.second.size() > id.index())
+			{
+				if (pair.second[id.index()] != nullptr)
+				{
+					pair.second[id.index()]->uninitialise();
+					pair.second[id.index()] = nullptr;
+				}
+			}
+		}
 	}
 
 	void EntityManager::resize(size_t size)

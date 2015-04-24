@@ -66,6 +66,9 @@ namespace Engine
 		virtual void uninitialise();
 		void update();
 
+		// Trigger quit event
+		void triggerQuit() { quit = true; }
+
 		// Check if quit event has been triggered
 		const bool checkQuit() { return quit; }
 

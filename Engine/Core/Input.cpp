@@ -3,6 +3,8 @@
 #include "../EntitySystem/World.h"
 #include "KeyboardMouse.h"
 #include "Controller.h"
+#include "../Rendering/Display.h"
+#include "../Rendering/Camera.h"
 
 namespace Engine
 {
@@ -62,6 +64,22 @@ namespace Engine
 				// Set quit flag
 				quit = true;
 			}
+			// Handle window events
+			else if (e.type == SDL_WINDOWEVENT)
+			{
+				if (e.window.event == SDL_WINDOWEVENT_RESIZED)
+				{
+					// Resize the display
+					if (manager->systemExists<Display>())
+						manager->getSystem<Display>()->resize(e.window.data1, e.window.data2);
+
+					// Resize camera projections
+					for (Camera::Handle &camera : manager->getWorld().entities.getAllComponents<Camera>(false))
+					{
+						camera->resize(e.window.data1, e.window.data2);
+					}
+				}
+			}
 			// Handle mouse motion
 			else if (e.type == SDL_MOUSEMOTION)
 			{
@@ -69,7 +87,7 @@ namespace Engine
 					get<KeyboardMouse>(e.motion.which).handle(e);
 			}
 			// Handle mouse buttons
-			else if (e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONDOWN)
+			else if (e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP)
 			{
 				if (exists<KeyboardMouse>(e.button.which))
 					get<KeyboardMouse>(e.button.which).handle(e);

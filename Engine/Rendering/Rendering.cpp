@@ -150,26 +150,29 @@ namespace Engine
 
 		for (BillboardRenderer::Handle &billboard : billboards)
 		{
-			// Buffer data
-			glBindBuffer(GL_ARRAY_BUFFER, billboard->buffer);
-			glBufferSubData(GL_ARRAY_BUFFER, 0, billboard->positions.size() * sizeof(glm::vec3), &billboard->positions[0][0]);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			if (billboard->positions.size() > 0)
+			{
+				// Buffer data
+				glBindBuffer(GL_ARRAY_BUFFER, billboard->buffer);
+				glBufferSubData(GL_ARRAY_BUFFER, 0, billboard->positions.size() * sizeof(glm::vec3), &billboard->positions[0][0]);
+				glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-			// Load texture
-			Texture2D &texture = manager->getSystem<Files>()->loadFile<Texture2D>(billboard->texture, true, false, 0);
-			texture.use(0);
+				// Load texture
+				Texture2D &texture = manager->getSystem<Files>()->loadFile<Texture2D>(billboard->texture, true, false, 0);
+				texture.use(0);
 
-			// Set uniforms
-			billboardShader.setUniform("scale", billboard->scale);
+				// Set uniforms
+				billboardShader.setUniform("scale", billboard->scale);
 
-			// Bind billboard position buffer
-			glBindVertexArray(billboard->vaObject);
+				// Bind billboard position buffer
+				glBindVertexArray(billboard->vaObject);
 
-			// Draw
-			glDrawArrays(GL_POINTS, 0, billboard->positions.size());
+				// Draw
+				glDrawArrays(GL_POINTS, 0, billboard->positions.size());
 
-			// Unbind
-			glBindVertexArray(0);
+				// Unbind
+				glBindVertexArray(0);
+			}
 		}
 	}
 
@@ -592,7 +595,6 @@ namespace Engine
 
 				// Set uniforms
 				shader.setUniform("sceneTexture", 0);
-				shader.setUniform("depthTexture", 1);
 				effect.second->setUniforms();
 
 				// Bind framebuffer for post processing pass
@@ -600,9 +602,9 @@ namespace Engine
 				{
 					// Read from final texture if using lighting, otherwise read from diffuse
 					if (camera->getLighting())
-						camera->getFramebuffer().bindTextures({ 4 }, effect.second->bindDepth());
+						camera->getFramebuffer().bindTextures({ 4 }, false);
 					else
-						camera->getFramebuffer().bindTextures({ 1 }, effect.second->bindDepth());
+						camera->getFramebuffer().bindTextures({ 1 }, false);
 
 					// Draw to first post processing texture
 					camera->getFramebuffer().bindDrawbuffers({ 5 });
@@ -610,7 +612,7 @@ namespace Engine
 				else if (passes % 2 == 0)
 				{
 					// Even pass read from second post processing texture
-					camera->getFramebuffer().bindTextures({ 6 }, effect.second->bindDepth());
+					camera->getFramebuffer().bindTextures({ 6 }, false);
 
 					// And draw to first
 					camera->getFramebuffer().bindDrawbuffers({ 5 });
@@ -618,7 +620,7 @@ namespace Engine
 				else
 				{
 					// Odd pass read from first post processing texture
-					camera->getFramebuffer().bindTextures({ 5 }, effect.second->bindDepth());
+					camera->getFramebuffer().bindTextures({ 5 }, false);
 
 					// And draw to second
 					camera->getFramebuffer().bindDrawbuffers({ 6 });
